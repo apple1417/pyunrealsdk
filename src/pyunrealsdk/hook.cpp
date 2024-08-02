@@ -6,6 +6,9 @@
 #include "unrealsdk/hook_manager.h"
 #include "unrealsdk/unreal/cast.h"
 #include "unrealsdk/unreal/prop_traits.h"
+#include "unrealsdk/unreal/structs/fweakobjectptr.h"
+#include "unrealsdk/unreal/wrappers/bound_function.h"
+#include "unrealsdk/unreal/wrappers/gobjects.h"
 #include "unrealsdk/unreal/wrappers/property_proxy.h"
 
 using namespace unrealsdk::unreal;
@@ -31,49 +34,136 @@ struct Unset {};
  * @return True if to block the function call.
  */
 bool handle_py_hook(Details& hook, const py::object& callback) {
-    py::object ret_arg;
-    if (hook.ret.has_value()) {
-        cast(hook.ret.prop, [&hook, &ret_arg]<typename T>(const T* /*prop*/) {
-            ret_arg = py::cast(hook.ret.get<T>());
-        });
-    } else {
-        ret_arg = py::type::of<Unset>();
-    }
+    try {
+        const py::gil_scoped_acquire gil{};
+        debug_this_thread();
 
-    auto should_block = callback(hook.obj, hook.args, ret_arg, hook.func);
-
-    if (py::isinstance<py::tuple>(should_block)) {
-        auto ret_tuple = py::cast<py::tuple>(should_block);
-        auto size = ret_tuple.size();
-
-        if (size == 1) {
-            LOG(WARNING,
-                "Return value of hook was tuple of size 1, expected 2. Not overwriting return "
-                "value.");
+        py::object ret_arg;
+        if (hook.ret.has_value()) {
+            cast(hook.ret.prop, [&hook, &ret_arg]<typename T>(const T* /*prop*/) {
+                ret_arg = py::cast(hook.ret.get<T>());
+            });
         } else {
-            if (size != 2) {
-                LOG(WARNING,
-                    "Return value of hook was tuple of size {}, expected 2. Extra values will be "
-                    "ignored.",
-                    size);
-            }
-
-            auto ret_override = ret_tuple[1];
-
-            if (py::type::of<Unset>().is(ret_override) || py::isinstance<Unset>(ret_override)) {
-                hook.ret.destroy();
-            } else if (!py::ellipsis{}.equal(ret_override)) {
-                cast(hook.ret.prop, [&hook, &ret_override]<typename T>(const T* /*prop*/) {
-                    auto value = py::cast<typename PropTraits<T>::Value>(ret_override);
-                    hook.ret.set<T>(value);
-                });
-            }
+            ret_arg = py::type::of<Unset>();
         }
 
-        should_block = std::move(ret_tuple[0]);
-    }
+        auto should_block = callback(hook.obj, hook.args, ret_arg, hook.func);
 
-    return is_block_sentinel(should_block);
+        if (py::isinstance<py::tuple>(should_block)) {
+            auto ret_tuple = py::cast<py::tuple>(should_block);
+            auto size = ret_tuple.size();
+
+            if (size == 1) {
+                LOG(WARNING,
+                    "Return value of hook was tuple of size 1, expected 2. Not overwriting return "
+                    "value.");
+            } else {
+                if (size != 2) {
+                    LOG(WARNING,
+                        "Return value of hook was tuple of size {}, expected 2. Extra values will "
+                        "be ignored.",
+                        size);
+                }
+
+                auto ret_override = ret_tuple[1];
+
+                if (py::type::of<Unset>().is(ret_override) || py::isinstance<Unset>(ret_override)) {
+                    hook.ret.destroy();
+                } else if (!py::ellipsis{}.equal(ret_override)) {
+                    cast(hook.ret.prop, [&hook, &ret_override]<typename T>(const T* /*prop*/) {
+                        auto value = py::cast<typename PropTraits<T>::Value>(ret_override);
+                        hook.ret.set<T>(value);
+                    });
+                }
+            }
+
+            should_block = std::move(ret_tuple[0]);
+        }
+
+        return is_block_sentinel(should_block);
+
+    } catch (const std::exception& ex) {
+        logging::log_python_exception(ex);
+        return false;
+    }
+}
+
+/**
+ * @brief Adds a hook which is bound to a specific object.
+ *
+ * @param func The bound function to hook.
+ * @param type Which type of hook to add.
+ * @param identifier The hook identifier.
+ * @param callback The callback to run when the hooked function is called.
+ * @return True if successfully added, false if an identical hook already existed.
+ */
+bool add_bound_hook(const BoundFunction& func,
+                    Type type,
+                    const std::wstring& identifier,
+                    const py::object& callback) {
+    // The challenge we have in providing this is that the given object might get garbage collected
+    // at some point while the hook is still active
+    // This has the obvious problem that dererencing it may cause an access violation
+    // It also has a subtler problem though: it's possible another object of the same type gets
+    // allocated at the exact same address, and triggers the hook.
+
+#if UE4
+    auto obj_address = reinterpret_cast<uintptr_t>(func.object);
+
+    // Unreal 4 supports weak object pointers. If the address matches, we'll double check with one.
+    FWeakObjectPtr weak_ptr{};
+    unrealsdk::gobjects().set_weak_object(&weak_ptr, func.object);
+
+    return add_hook(func.func->get_path_name(), type, identifier,
+                    [callback, obj_address, weak_ptr](Details& hook) {
+                        if (reinterpret_cast<uintptr_t>(hook.obj) != obj_address) {
+                            return false;
+                        }
+                        if (unrealsdk::gobjects().get_weak_object(&weak_ptr) != hook.obj) {
+                            return false;
+                        }
+
+                        return handle_py_hook(hook, callback);
+                    });
+#else
+    auto obj_address = reinterpret_cast<uintptr_t>(func.object);
+
+    // There isn't as great a solution for Unreal 3. Instead, just read a bunch of fields and make
+    // sure they keep the same values. Try to balance ease of comparison against chance of false
+    // positives, hopefully the user will have removed the hook before one gets through.
+
+    // While there definitely some objects with duplicate names (e.g. auto created subobjects),
+    // typically transient objects use the default name, the class name with an auto incrementing
+    // index. These indexes are the closest thing we have to object serial numbers in ue4.
+    auto name = func.object->Name;
+
+    // The internal index into gobjects should be just as unique as the address. While the index
+    // will get repeats too, other allocations inbetween should mean the two are pretty much always
+    // out of sync.
+    auto internal_idx = func.object->InternalIndex;
+
+    // A lot of transient objects are under persistent level, which changes every map. Will also
+    // catch things like auto created subobjects.
+    auto outer_address = reinterpret_cast<uintptr_t>(func.object->Outer);
+
+    return add_hook(func.func->get_path_name(), type, identifier,
+                    [callback, obj_address, name, internal_idx, outer_address](Details& hook) {
+                        if (reinterpret_cast<uintptr_t>(hook.obj) != obj_address) {
+                            return false;
+                        }
+                        if (hook.obj->Name != name) {
+                            return false;
+                        }
+                        if (hook.obj->InternalIndex != internal_idx) {
+                            return false;
+                        }
+                        if (reinterpret_cast<uintptr_t>(hook.obj->Outer) != outer_address) {
+                            return false;
+                        }
+
+                        return handle_py_hook(hook, callback);
+                    });
+#endif
 }
 
 }  // namespace
@@ -117,18 +207,8 @@ void register_module(py::module_& mod) {
         "add_hook",
         [](const std::wstring& func, Type type, const std::wstring& identifier,
            const py::object& callback) {
-            add_hook(func, type, identifier, [callback](Details& hook) {
-                try {
-                    const py::gil_scoped_acquire gil{};
-                    debug_this_thread();
-
-                    return handle_py_hook(hook, callback);
-
-                } catch (const std::exception& ex) {
-                    logging::log_python_exception(ex);
-                    return false;
-                }
-            });
+            return add_hook(func, type, identifier,
+                            [callback](Details& hook) { return handle_py_hook(hook, callback); });
         },
         "Adds a hook which runs when an unreal function is called.\n"
         "\n"
@@ -165,7 +245,7 @@ void register_module(py::module_& mod) {
         "value only serves to change what's passed in `ret` during any later hooks.\n"
         "\n"
         "Args:\n"
-        "    func: The function to hook.\n"
+        "    func: The name of the function to hook.\n"
         "    type: Which type of hook to add.\n"
         "    identifier: The hook identifier.\n"
         "    callback: The callback to run when the hooked function is called.\n"
@@ -173,11 +253,31 @@ void register_module(py::module_& mod) {
         "    True if successfully added, false if an identical hook already existed.",
         "func"_a, "type"_a, "identifier"_a, "callback"_a);
 
+    hooks.def("add_bound_hook", &add_bound_hook,
+              "Adds a hook which is bound to a specific object.\n"
+              "\n"
+              "Acts as a wrapper around `add_hook`, inheriting all it's semantics. The given\n"
+              "object is ignored when it comes to checking for identical hooks - hooking the\n"
+              "same function on two different objects requires two different identifiers.\n"
+              "\n"
+              "Will not cause issues if the given object gets garbage collected, however\n"
+              "calling code should remove the hook as soon as possible after this happens.\n"
+              "\n"
+              "Args:\n"
+              "    func: The bound function to hook.\n"
+              "    type: Which type of hook to add.\n"
+              "    identifier: The hook identifier.\n"
+              "    callback: The callback to run when the hooked function is called.\n"
+              "Returns:\n"
+              "    True if successfully added, false if an identical hook (ignoring the object)\n"
+              "    already existed.",
+              "func"_a, "type"_a, "identifier"_a, "callback"_a);
+
     hooks.def("has_hook", &unrealsdk::hook_manager::has_hook,
               "Checks if a hook exists.\n"
               "\n"
               "Args:\n"
-              "    func: The function to check.\n"
+              "    func: The name of the function to check.\n"
               "    type: The type of hook to check.\n"
               "    identifier: The hook identifier.\n"
               "Returns:\n"
@@ -188,7 +288,7 @@ void register_module(py::module_& mod) {
               "Removes an existing hook.\n"
               "\n"
               "Args:\n"
-              "    func: The function to remove hooks from.\n"
+              "    func: The name of the function to remove hooks from.\n"
               "    type: The type of hook to remove.\n"
               "    identifier: The hook identifier.\n"
               "Returns:\n"

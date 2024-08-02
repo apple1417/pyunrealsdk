@@ -87,21 +87,21 @@ def add_hook(
     type: _PreHookType,
     identifier: str,
     callback: _PreHookCallback,
-) -> None: ...
+) -> bool: ...
 @overload
 def add_hook(
     func: str,
     type: _PostHookType,
     identifier: str,
     callback: _PostHookCallback,
-) -> None: ...
+) -> bool: ...
 @overload
 def add_hook(
     func: str,
     type: Type,
     identifier: str,
     callback: _PreHookCallback | _PostHookCallback,
-) -> None:
+) -> bool:
     """
     Adds a hook which runs when an unreal function is called.
 
@@ -138,7 +138,7 @@ def add_hook(
     value only serves to change what's passed in `ret` during any later hooks.
 
     Args:
-        func: The function to hook.
+        func: The name of the function to hook.
         type: Which type of hook to add.
         identifier: The hook identifier.
         callback: The callback to run when the hooked function is called.
@@ -146,12 +146,53 @@ def add_hook(
         True if successfully added, false if an identical hook already existed.
     """
 
+@overload
+def add_bound_hook(
+    func: BoundFunction,
+    type: _PreHookType,
+    identifier: str,
+    callback: _PreHookCallback,
+) -> bool: ...
+@overload
+def add_bound_hook(
+    func: BoundFunction,
+    type: _PostHookType,
+    identifier: str,
+    callback: _PostHookCallback,
+) -> bool: ...
+@overload
+def add_bound_hook(
+    func: BoundFunction,
+    type: Type,
+    identifier: str,
+    callback: _PreHookCallback | _PostHookCallback,
+) -> bool:
+    """
+    Adds a hook which is bound to a specific object.
+
+    Acts as a wrapper around `add_hook`, inheriting all it's semantics. The given
+    object is ignored when it comes to checking for identical hooks - hooking the
+    same function on two different objects requires two different identifiers.
+
+    Will not cause issues if the given object gets garbage collected, however
+    calling code should remove the hook as soon as possible after this happens.
+
+    Args:
+        func: The bound function to hook.
+        type: Which type of hook to add.
+        identifier: The hook identifier.
+        callback: The callback to run when the hooked function is called.
+    Returns:
+        True if successfully added, false if an identical hook (ignoring the object)
+        already existed
+    """
+
 def has_hook(func: str, type: Type, identifier: str) -> bool:
     """
     Checks if a hook exists.
 
     Args:
-        func: The function to check.
+        func: The name of the function to check.
         type: The type of hook to check.
         identifier: The hook identifier.
     Returns:
@@ -179,7 +220,7 @@ def remove_hook(func: str, type: Type, identifier: str) -> bool:
     Removes an existing hook.
 
     Args:
-        func: The function to remove hooks from.
+        func: The name of the function to remove hooks from.
         type: The type of hook to remove.
         identifier: The hook identifier.
     Returns:
