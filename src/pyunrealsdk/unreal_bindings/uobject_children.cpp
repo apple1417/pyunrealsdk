@@ -27,6 +27,7 @@
 #include "unrealsdk/unreal/classes/uproperty.h"
 #include "unrealsdk/unreal/classes/uscriptstruct.h"
 #include "unrealsdk/unreal/classes/ustruct.h"
+#include "unrealsdk/unreal/structs/ffield.h"
 
 #ifdef PYUNREALSDK_INTERNAL
 
@@ -39,6 +40,29 @@ void register_uobject_children(py::module_& mod) {
 
     PyUEClass<UField, UObject>(mod, "UField").def_member_prop("Next", &UField::Next);
 
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+    PyUEClass<FField>(mod, "FField")
+        .def_member_prop("Class", &FField::Class)
+        .def_member_prop("Owner", &FField::Owner)
+        .def_member_prop("Next", &FField::Next)
+        .def_member_prop("Name", &FField::Name)
+        .def(
+            "__repr__",
+            [](FField* self) {
+                return std::format("{}'{}'", self->Class()->Name(),
+                                   unrealsdk::utils::narrow(self->get_path_name()));
+            },
+            "Gets this object's full name.\n"
+            "\n"
+            "Returns:\n"
+            "    This object's name.")
+        .def("_path_name", &FField::get_path_name,
+             "Gets this object's path name, excluding the class.\n"
+             "\n"
+             "Returns:\n"
+             "    This object's name.");
+#endif
+
     // ======== Second Layer Subclasses ========
 
     PyUEClass<UConst, UField>(mod, "UConst")
@@ -47,7 +71,13 @@ void register_uobject_children(py::module_& mod) {
             "Value", [](const UConst* self) { return (std::string)self->Value(); },
             [](UConst* self, const std::string& new_value) { self->Value() = new_value; });
 
-    PyUEClass<UProperty, UField>(mod, "UProperty")
+    PyUEClass<UProperty,
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+              FField
+#else
+              UField
+#endif
+              >(mod, "UProperty")
         .def_member_prop("ArrayDim", &UProperty::ArrayDim)
         .def_member_prop("ElementSize", &UProperty::ElementSize)
         .def_member_prop("PropertyFlags", &UProperty::PropertyFlags)

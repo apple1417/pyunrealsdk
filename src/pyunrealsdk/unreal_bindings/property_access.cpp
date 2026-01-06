@@ -74,48 +74,49 @@ std::vector<std::string> py_dir(const py::object& self, const UStruct* type) {
     return names;
 }
 
-py::object py_getattr(UField* field,
-                      uintptr_t base_addr,
-                      const unrealsdk::unreal::UnrealPointer<void>& parent,
-                      UObject* func_obj) {
-    if (field->is_instance(find_class<UProperty>())) {
-        auto prop = reinterpret_cast<UProperty*>(field);
-        if (prop->ArrayDim() < 1) {
-            throw py::attribute_error(
-                std::format("attribute '{}' has size of {}", prop->Name(), prop->ArrayDim()));
-        }
+namespace {
 
-        // If we have a static array, return it as a tuple.
-        // Store in a list for now so we can still append.
-        py::list ret{prop->ArrayDim()};
-
-        cast(prop, [base_addr, &ret, &parent]<typename T>(const T* prop) {
-            for (size_t i = 0; i < (size_t)prop->ArrayDim(); i++) {
-                auto val = get_property<T>(prop, i, base_addr, parent);
-
-                // Multiple property types expose a get enum method
-                constexpr bool is_enum = requires(T* type) {
-                    { type->Enum() } -> std::convertible_to<UEnum*>;
-                };
-
-                // If the value we're reading is an enum, convert it to a python enum
-                if constexpr (is_enum) {
-                    auto ue_enum = prop->Enum();
-                    if (ue_enum != nullptr) {
-                        ret[i] = enum_as_py_enum(ue_enum)(val);
-                        continue;
-                    }
-                }
-                // Otherwise store as is
-
-                ret[i] = std::move(val);
-            }
-        });
-        if (prop->ArrayDim() == 1) {
-            return ret[0];
-        }
-        return py::tuple(ret);
+py::object py_getattr_property(UProperty* prop,
+                               uintptr_t base_addr,
+                               const unrealsdk::unreal::UnrealPointer<void>& parent) {
+    if (prop->ArrayDim() < 1) {
+        throw py::attribute_error(
+            std::format("attribute '{}' has size of {}", prop->Name(), prop->ArrayDim()));
     }
+
+    // If we have a static array, return it as a tuple.
+    // Store in a list for now so we can still append.
+    py::list ret{prop->ArrayDim()};
+
+    cast(prop, [base_addr, &ret, &parent]<typename T>(const T* prop) {
+        for (size_t i = 0; i < (size_t)prop->ArrayDim(); i++) {
+            auto val = get_property<T>(prop, i, base_addr, parent);
+
+            // Multiple property types expose a get enum method
+            constexpr bool is_enum = requires(T* type) {
+                { type->Enum() } -> std::convertible_to<UEnum*>;
+            };
+
+            // If the value we're reading is an enum, convert it to a python enum
+            if constexpr (is_enum) {
+                auto ue_enum = prop->Enum();
+                if (ue_enum != nullptr) {
+                    ret[i] = enum_as_py_enum(ue_enum)(val);
+                    continue;
+                }
+            }
+            // Otherwise store as is
+
+            ret[i] = std::move(val);
+        }
+    });
+    if (prop->ArrayDim() == 1) {
+        return ret[0];
+    }
+    return py::tuple(ret);
+}
+
+py::object py_getattr_non_property(UField* field, UObject* func_obj) {
     if (field->is_instance(find_class<UFunction>())) {
         if (func_obj == nullptr) {
             throw py::attribute_error(
@@ -145,14 +146,7 @@ py::object py_getattr(UField* field,
 // The templated lambda and all the if constexprs make everything have a really high penalty
 // Yes it's probably a bit complex, but it's also a bit awkward trying to split it up
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-void py_setattr_direct(UField* field, uintptr_t base_addr, const py::object& value) {
-    if (!field->is_instance(find_class<UProperty>())) {
-        throw py::attribute_error(
-            std::format("attribute '{}' is not a property, and thus cannot be set", field->Name()));
-    }
-
-    auto prop = reinterpret_cast<UProperty*>(field);
-
+void py_setattr_direct(UProperty* prop, uintptr_t base_addr, const py::object& value) {
     py::sequence value_seq;
     if (prop->ArrayDim() > 1) {
         if (!py::isinstance<py::sequence>(value)) {
@@ -220,6 +214,60 @@ void py_setattr_direct(UField* field, uintptr_t base_addr, const py::object& val
         }
     });
 }
+
+}  // namespace
+
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+py::object py_getattr(UField* field,
+                      uintptr_t /*base_addr*/,
+                      const unrealsdk::unreal::UnrealPointer<void>& /*parent*/,
+                      unrealsdk::unreal::UObject* func_obj) {
+    // If we're using FFields, anything left as a UField cannot possibly be a property
+    return py_getattr_non_property(field, func_obj);
+}
+py::object py_getattr(FField* field,
+                      uintptr_t base_addr,
+                      const unrealsdk::unreal::UnrealPointer<void>& parent,
+                      unrealsdk::unreal::UObject* /*func_obj*/) {
+    // TODO: make sure it's not a base FField??
+    auto prop = reinterpret_cast<UProperty*>(field);
+    return py_getattr_property(prop, base_addr, parent);
+}
+#else
+py::object py_getattr(UField* field,
+                      uintptr_t /*base_addr*/,
+                      const unrealsdk::unreal::UnrealPointer<void>& /*parent*/,
+                      unrealsdk::unreal::UObject* func_obj) {
+    if (field->is_instance(find_class<UProperty>())) {
+        auto prop = reinterpret_cast<UProperty*>(field);
+        return py_getattr_property(prop, base_addr, parent);
+    }
+    return py_getattr_non_property(field, func_obj);
+}
+#endif
+
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+void py_setattr_direct(UField* field, uintptr_t /* base_addr */, const py::object& /* value */) {
+    // If we're using FFields, anything left as a UField cannot possibly be a property
+    throw py::attribute_error(
+        std::format("attribute '{}' is not a property, and thus cannot be set", field->Name()));
+}
+void py_setattr_direct(FField* field, uintptr_t base_addr, const py::object& value) {
+    // TODO: make sure it's not a base FField??
+    auto prop = reinterpret_cast<UProperty*>(field);
+    py_setattr_direct(prop, base_addr, value);
+}
+#else
+void py_setattr_direct(UField* field, uintptr_t /* base_addr */, const py::object& /* value */) {
+    if (!field->is_instance(find_class<UProperty>())) {
+        throw py::attribute_error(
+            std::format("attribute '{}' is not a property, and thus cannot be set", field->Name()));
+    }
+
+    auto prop = reinterpret_cast<UProperty*>(field);
+    py_setattr_direct(prop, base_addr, value);
+}
+#endif
 
 }  // namespace pyunrealsdk::unreal
 

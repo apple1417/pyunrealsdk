@@ -2,17 +2,20 @@
 #define PYUNREALSDK_UNREAL_BINDINGS_PROPERTY_ACCESS_H
 
 #include "pyunrealsdk/pch.h"
-#include "unrealsdk/unreal/wrappers/unreal_pointer.h"
 
 #ifdef PYUNREALSDK_INTERNAL
 
 namespace unrealsdk::unreal {
 
 struct FName;
+struct FField;
 class UObject;
 class UField;
 class UStruct;
 class UProperty;
+
+template <typename T>
+class UnrealPointer;
 
 }  // namespace unrealsdk::unreal
 
@@ -57,6 +60,12 @@ py::object py_getattr(unrealsdk::unreal::UField* field,
                       uintptr_t base_addr,
                       const unrealsdk::unreal::UnrealPointer<void>& parent,
                       unrealsdk::unreal::UObject* func_obj = nullptr);
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+py::object py_getattr(unrealsdk::unreal::FField* field,
+                      uintptr_t base_addr,
+                      const unrealsdk::unreal::UnrealPointer<void>& parent,
+                      unrealsdk::unreal::UObject* func_obj = nullptr);
+#endif
 
 /**
  * @brief Sets an unreal field to a python object directly.
@@ -72,6 +81,11 @@ py::object py_getattr(unrealsdk::unreal::UField* field,
 void py_setattr_direct(unrealsdk::unreal::UField* field,
                        uintptr_t base_addr,
                        const py::object& value);
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+void py_setattr_direct(unrealsdk::unreal::FField* field,
+                       uintptr_t base_addr,
+                       const py::object& value);
+#endif
 
 }  // namespace pyunrealsdk::unreal
 
