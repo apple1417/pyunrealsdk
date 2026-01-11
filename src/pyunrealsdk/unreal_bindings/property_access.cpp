@@ -17,6 +17,7 @@
 #include "unrealsdk/unreal/classes/ustruct_funcs.h"
 #include "unrealsdk/unreal/find_class.h"
 #include "unrealsdk/unreal/prop_traits.h"
+#include "unrealsdk/unreal/structs/ffield.h"
 #include "unrealsdk/unreal/structs/fname.h"
 #include "unrealsdk/unreal/wrappers/bound_function.h"
 #include "unrealsdk/unreal/wrappers/wrapped_array.h"
@@ -33,9 +34,48 @@ bool dir_includes_unreal = true;
 
 }  // namespace
 
-UField* py_find_field(const FName& name, const UStruct* type) {
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+PyFieldVariant::PyFieldVariant(const std::variant<std::nullptr_t, UProperty*, UField*>& var) {
+    if (std::holds_alternative<std::nullptr_t>(var)) {
+        *this = nullptr;
+    } else if (std::holds_alternative<UProperty*>(var)) {
+        *this = std::get<UProperty*>(var);
+    } else {
+        *this = std::get<UField*>(var);
+    }
+}
+#endif
+
+UProperty* PyFieldVariant::as_prop(void) const {
+    auto prop = this->as_field();
+    if (prop != nullptr) {
+        return prop;
+    }
+
+    auto obj = this->as_obj();
+    if (obj == nullptr) {
+        return nullptr;
+    }
+
+    if (obj->is_instance(find_class<UProperty>())) {
+        return reinterpret_cast<UProperty*>(obj);
+    }
+    return nullptr;
+}
+UField* PyFieldVariant::as_non_prop_field(void) const {
+    auto obj = this->as_obj();
+    if (obj == nullptr) {
+        return nullptr;
+    }
+    if (obj->is_instance(find_class<UProperty>())) {
+        return nullptr;
+    }
+    return obj;
+}
+
+PyFieldVariant py_find_field(const FName& name, const UStruct* type) {
     try {
-        return type->find(name);
+        return {type->find(name)};
     } catch (const std::invalid_argument&) {
         throw py::attribute_error(
             std::format("'{}' object has no attribute '{}'", type->Name(), name));
@@ -217,57 +257,43 @@ void py_setattr_direct(UProperty* prop, uintptr_t base_addr, const py::object& v
 
 }  // namespace
 
-#if UNREALSDK_PROPERTIES_ARE_FFIELD
-py::object py_getattr(UField* field,
-                      uintptr_t /*base_addr*/,
-                      const unrealsdk::unreal::UnrealPointer<void>& /*parent*/,
-                      unrealsdk::unreal::UObject* func_obj) {
-    // If we're using FFields, anything left as a UField cannot possibly be a property
-    return py_getattr_non_property(field, func_obj);
-}
-py::object py_getattr(FField* field,
+// it's pointer sized so no point using a reference like clang tidy wants
+static_assert(sizeof(PyFieldVariant) <= sizeof(uintptr_t));
+
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+py::object py_getattr(PyFieldVariant field,
                       uintptr_t base_addr,
                       const unrealsdk::unreal::UnrealPointer<void>& parent,
-                      unrealsdk::unreal::UObject* /*func_obj*/) {
-    // TODO: make sure it's not a base FField??
-    auto prop = reinterpret_cast<UProperty*>(field);
-    return py_getattr_property(prop, base_addr, parent);
-}
-#else
-py::object py_getattr(UField* field,
-                      uintptr_t /*base_addr*/,
-                      const unrealsdk::unreal::UnrealPointer<void>& /*parent*/,
                       unrealsdk::unreal::UObject* func_obj) {
-    if (field->is_instance(find_class<UProperty>())) {
-        auto prop = reinterpret_cast<UProperty*>(field);
+    UProperty* prop = field.as_prop();
+    if (prop != nullptr) {
         return py_getattr_property(prop, base_addr, parent);
     }
-    return py_getattr_non_property(field, func_obj);
-}
-#endif
 
-#if UNREALSDK_PROPERTIES_ARE_FFIELD
-void py_setattr_direct(UField* field, uintptr_t /* base_addr */, const py::object& /* value */) {
-    // If we're using FFields, anything left as a UField cannot possibly be a property
-    throw py::attribute_error(
-        std::format("attribute '{}' is not a property, and thus cannot be set", field->Name()));
-}
-void py_setattr_direct(FField* field, uintptr_t base_addr, const py::object& value) {
-    // TODO: make sure it's not a base FField??
-    auto prop = reinterpret_cast<UProperty*>(field);
-    py_setattr_direct(prop, base_addr, value);
-}
-#else
-void py_setattr_direct(UField* field, uintptr_t /* base_addr */, const py::object& /* value */) {
-    if (!field->is_instance(find_class<UProperty>())) {
-        throw py::attribute_error(
-            std::format("attribute '{}' is not a property, and thus cannot be set", field->Name()));
+    UField* ufield = field.as_non_prop_field();
+    if (ufield != nullptr) {
+        return py_getattr_non_property(ufield, func_obj);
     }
 
-    auto prop = reinterpret_cast<UProperty*>(field);
-    py_setattr_direct(prop, base_addr, value);
+    throw py::attribute_error("cannot get a null field");
 }
-#endif
+
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+void py_setattr_direct(PyFieldVariant field, uintptr_t base_addr, const py::object& value) {
+    UProperty* prop = field.as_prop();
+    if (prop != nullptr) {
+        py_setattr_direct(prop, base_addr, value);
+        return;
+    }
+
+    UField* ufield = field.as_non_prop_field();
+    if (ufield != nullptr) {
+        throw py::attribute_error(std::format(
+            "attribute '{}' is not a property, and thus cannot be set", ufield->Name()));
+    }
+
+    throw py::attribute_error("cannot set a null field");
+}
 
 }  // namespace pyunrealsdk::unreal
 

@@ -140,8 +140,11 @@ void register_uobject(py::module_& mod) {
                 auto field = py_find_field(py::cast<FName>(name), self->Class());
                 py_setattr_direct(field, reinterpret_cast<uintptr_t>(self), value);
 
-                if (should_notify_counter > 0 && field->is_instance(find_class<UProperty>())) {
-                    self->post_edit_change_property(reinterpret_cast<UProperty*>(field));
+                if (should_notify_counter > 0) {
+                    auto prop = field.as_prop();
+                    if (prop != nullptr) {
+                        self->post_edit_change_property(prop);
+                    }
                 }
             },
             "Writes a value to an unreal field on the object.\n"
@@ -154,14 +157,15 @@ void register_uobject(py::module_& mod) {
             "name"_a, "value"_a)
         .def(
             "_set_field",
-            [](UObject* self, UField* field, const py::object& value) {
-                if (field == nullptr) {
-                    throw py::attribute_error("cannot access null attribute");
-                }
-                py_setattr_direct(field, reinterpret_cast<uintptr_t>(self), value);
+            [](UObject* self, PyFieldVariant::from_py_type field, const py::object& value) {
+                PyFieldVariant var{field};
+                py_setattr_direct(var, reinterpret_cast<uintptr_t>(self), value);
 
-                if (should_notify_counter > 0 && field->is_instance(find_class<UProperty>())) {
-                    self->post_edit_change_property(reinterpret_cast<UProperty*>(field));
+                if (should_notify_counter > 0) {
+                    auto prop = var.as_prop();
+                    if (prop != nullptr) {
+                        self->post_edit_change_property(prop);
+                    }
                 }
             },
             "Writes a value to an unreal field on the object.\n"

@@ -28,6 +28,7 @@
 #include "unrealsdk/unreal/classes/uscriptstruct.h"
 #include "unrealsdk/unreal/classes/ustruct.h"
 #include "unrealsdk/unreal/structs/ffield.h"
+#include "unrealsdk/unreal/structs/tfieldvariant.h"
 
 #ifdef PYUNREALSDK_INTERNAL
 
@@ -36,16 +37,42 @@ using namespace unrealsdk::unreal;
 namespace pyunrealsdk::unreal {
 
 void register_uobject_children(py::module_& mod) {
-    // ======== First Layer Subclasses ========
+    // ======== Not technically subclasses but still closely related ========
 
-    PyUEClass<UField, UObject>(mod, "UField").def_member_prop("Next", &UField::Next);
+    PyUEClass<FFieldClass>(mod, "FFieldClass")
+        .def_member_prop("Name", &FFieldClass::Name)
+        .def_member_prop("SuperField", &FFieldClass::SuperField)
+        .def(
+            "__repr__",
+            [](FFieldClass* self) {
+                // Make this kind of look like a normal class?
+                return std::format("FFieldClass'{}'", self->Name());
+            },
+            "Gets this object's full name.\n"
+            "\n"
+            "Returns:\n"
+            "    This object's name.");
 
-#if UNREALSDK_PROPERTIES_ARE_FFIELD
     PyUEClass<FField>(mod, "FField")
         .def_member_prop("Class", &FField::Class)
-        .def_member_prop("Owner", &FField::Owner)
         .def_member_prop("Next", &FField::Next)
         .def_member_prop("Name", &FField::Name)
+        .def_property(
+            "Owner",
+            [](FField& self) {
+                py::object ret;
+                self.Owner().cast([&]<typename T>(T* obj) { ret = py::cast(obj); });
+                return ret;
+            },
+            [](FField& self, std::variant<std::nullptr_t, UObject*, FField*> val) {
+                if (std::holds_alternative<std::nullptr_t>(val)) {
+                    self.Owner() = nullptr;
+                } else if (std::holds_alternative<UObject*>(val)) {
+                    self.Owner() = std::get<UObject*>(val);
+                } else {
+                    self.Owner() = std::get<FField*>(val);
+                }
+            })
         .def(
             "__repr__",
             [](FField* self) {
@@ -61,7 +88,10 @@ void register_uobject_children(py::module_& mod) {
              "\n"
              "Returns:\n"
              "    This object's name.");
-#endif
+
+    // ======== First Layer Subclasses ========
+
+    PyUEClass<UField, UObject>(mod, "UField").def_member_prop("Next", &UField::Next);
 
     // ======== Second Layer Subclasses ========
 
