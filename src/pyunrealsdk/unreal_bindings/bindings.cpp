@@ -10,6 +10,7 @@
 #include "pyunrealsdk/unreal_bindings/wrapped_array.h"
 #include "pyunrealsdk/unreal_bindings/wrapped_multicast_delegate.h"
 #include "pyunrealsdk/unreal_bindings/wrapped_struct.h"
+#include "pyunrealsdk/unreal_bindings/gbxdefptr.h"
 #include "unrealsdk/unreal/classes/ufield.h"
 #include "unrealsdk/unreal/classes/ustruct.h"
 #include "unrealsdk/unreal/classes/ustruct_funcs.h"
@@ -34,6 +35,7 @@ void register_module(py::module_& mod) {
     register_weak_pointer(unreal);
     register_persistent_object_properties(unreal);
     register_wrapped_multicast_delegate(unreal);
+    register_gbxdefptr(unreal);
 }
 
 }  // namespace pyunrealsdk::unreal
