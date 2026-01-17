@@ -186,13 +186,6 @@ void array_py_emplace_struct(WrappedArray& self,
                              py::ssize_t py_idx,
                              const py::args& args,
                              const py::kwargs& kwargs) {
-#if UNREALSDK_PROPERTIES_ARE_FFIELD
-    (void)self;
-    (void)py_idx;
-    (void)args;
-    (void)kwargs;
-    throw std::runtime_error("emplate struct not implemented");
-#else
     if (!self.type->is_instance(find_class<UStructProperty>())) {
         throw py::type_error("tried to emplace_struct into an array not made of structs");
     }
@@ -241,7 +234,6 @@ void array_py_emplace_struct(WrappedArray& self,
         self.resize(size);
         throw;
     }
-#endif
 }
 
 }  // namespace pyunrealsdk::unreal::impl
