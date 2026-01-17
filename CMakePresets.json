@@ -138,6 +138,19 @@
       }
     },
     {
+      "name": "_oak2",
+      "hidden": true,
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "EXPLICIT_PYTHON_ARCH": "amd64",
+        "UNREALSDK_FLAVOUR": "OAK2",
+        "UNREALSDK_ARCH": "x64"
+      }
+    },
+    {
       "name": "_debug",
       "hidden": true,
       "cacheVariables": {
@@ -348,6 +361,26 @@
         "_base",
         "_msvc",
         "_oak",
+        "_release"
+      ]
+    },
+    {
+      "name": "msvc-oak2-debug",
+      "displayName": "Oak2 Debug (MSVC)",
+      "inherits": [
+        "_base",
+        "_msvc",
+        "_oak2",
+        "_debug"
+      ]
+    },
+    {
+      "name": "msvc-oak2-release",
+      "displayName": "Oak2 Release (MSVC)",
+      "inherits": [
+        "_base",
+        "_msvc",
+        "_oak2",
         "_release"
       ]
     }
