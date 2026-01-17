@@ -165,11 +165,12 @@ void register_wrapped_struct(py::module_& mod) {
             "name"_a)
         .def(
             "_get_field",
-            [](const WrappedStruct& self, UField* field) {
-                if (field == nullptr) {
+            [](const WrappedStruct& self, PyFieldVariant::from_py_type field) {
+                PyFieldVariant var{field};
+                if (var == nullptr) {
                     throw py::attribute_error("cannot access null attribute");
                 }
-                return py_getattr(field, reinterpret_cast<uintptr_t>(self.base.get()), self.base);
+                return py_getattr(var, reinterpret_cast<uintptr_t>(self.base.get()), self.base);
             },
             "Reads an unreal field off of the struct.\n"
             "\n"
@@ -219,11 +220,12 @@ void register_wrapped_struct(py::module_& mod) {
             "name"_a, "value"_a)
         .def(
             "_set_field",
-            [](WrappedStruct& self, UField* field, const py::object& value) {
-                if (field == nullptr) {
+            [](WrappedStruct& self, PyFieldVariant::from_py_type field, const py::object& value) {
+                PyFieldVariant var{field};
+                if (var == nullptr) {
                     throw py::attribute_error("cannot access null attribute");
                 }
-                py_setattr_direct(field, reinterpret_cast<uintptr_t>(self.base.get()), value);
+                py_setattr_direct(var, reinterpret_cast<uintptr_t>(self.base.get()), value);
             },
             "Writes a value to an unreal field on the struct.\n"
             "\n"

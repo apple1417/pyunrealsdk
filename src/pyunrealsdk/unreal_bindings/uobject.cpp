@@ -96,11 +96,12 @@ void register_uobject(py::module_& mod) {
             "name"_a)
         .def(
             "_get_field",
-            [](UObject* self, UField* field) {
-                if (field == nullptr) {
+            [](UObject* self, PyFieldVariant::from_py_type field) {
+                PyFieldVariant var{field};
+                if (var == nullptr) {
                     throw py::attribute_error("cannot access null attribute");
                 }
-                return py_getattr(field, reinterpret_cast<uintptr_t>(self), nullptr, self);
+                return py_getattr(var, reinterpret_cast<uintptr_t>(self), nullptr, self);
             },
             "Reads an unreal field off of the object.\n"
             "\n"
