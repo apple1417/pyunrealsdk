@@ -3,6 +3,7 @@
 #include "pyunrealsdk/unreal_bindings/bindings.h"
 #include "unrealsdk/unreal/classes/properties/attribute_property.h"
 #include "unrealsdk/unreal/classes/properties/copyable_property.h"
+#include "unrealsdk/unreal/classes/properties/fgbxdefptrproperty.h"
 #include "unrealsdk/unreal/classes/properties/persistent_object_ptr_property.h"
 #include "unrealsdk/unreal/classes/properties/uarrayproperty.h"
 #include "unrealsdk/unreal/classes/properties/uboolproperty.h"
@@ -18,7 +19,6 @@
 #include "unrealsdk/unreal/classes/properties/ustructproperty.h"
 #include "unrealsdk/unreal/classes/properties/utextproperty.h"
 #include "unrealsdk/unreal/classes/properties/uweakobjectproperty.h"
-#include "unrealsdk/unreal/classes/properties/fgbxdefptrproperty.h"
 #include "unrealsdk/unreal/classes/ublueprintgeneratedclass.h"
 #include "unrealsdk/unreal/classes/uclass.h"
 #include "unrealsdk/unreal/classes/uconst.h"
@@ -171,16 +171,33 @@ void register_uobject_children(py::module_& mod) {
              "\n"
              "Returns:\n"
              "    The size which must be allocated.")
-        .def("_find", &UStruct::find,
-             "Finds a child field by name.\n"
-             "\n"
-             "Throws an exception if the child is not found.\n"
-             "\n"
-             "Args:\n"
-             "    name: The name of the child field.\n"
-             "Returns:\n"
-             "    The found child field.",
-             "name"_a)
+        .def(
+            "_find",
+            [](UStruct* self, FName name) {
+                auto ret = self->find(name);
+
+                UField* field = nullptr;
+                if ((field = ret.as_obj()) != nullptr) {
+                    return py::cast(field);
+                }
+
+                UProperty* prop = nullptr;
+                if ((prop = ret.as_field()) != nullptr) {
+                    return py::cast(prop);
+                }
+
+                // This should be impossible, because the find class should throw first
+                throw std::invalid_argument("Couldn't find field " + (std::string)name);
+            },
+            "Finds a child field by name.\n"
+            "\n"
+            "Throws an exception if the child is not found.\n"
+            "\n"
+            "Args:\n"
+            "    name: The name of the child field.\n"
+            "Returns:\n"
+            "    The found child field.",
+            "name"_a)
         .def("_find_prop", &UStruct::find_prop,
              "Finds a child property by name.\n"
              "\n"
