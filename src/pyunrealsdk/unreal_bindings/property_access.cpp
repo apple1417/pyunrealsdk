@@ -1,5 +1,6 @@
 #include "pyunrealsdk/pch.h"
 #include "pyunrealsdk/unreal_bindings/property_access.h"
+#include <stdexcept>
 #include "pyunrealsdk/static_py_object.h"
 #include "pyunrealsdk/unreal_bindings/uenum.h"
 #include "pyunrealsdk/unreal_bindings/wrapped_array.h"
@@ -49,7 +50,12 @@ PyFieldVariant::PyFieldVariant(const std::variant<std::nullptr_t, UProperty*, UF
 UProperty* PyFieldVariant::as_prop(void) const {
     auto prop = this->as_field();
     if (prop != nullptr) {
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
         return prop;
+#else
+        // Expect LTO to detect as_field always returns null and completely remove this
+        throw std::runtime_error("got ffield on build with them disable!");
+#endif
     }
 
     auto obj = this->as_obj();

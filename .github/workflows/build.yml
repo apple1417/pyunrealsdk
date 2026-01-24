@@ -16,8 +16,10 @@ jobs:
         preset: [
           "clang-willow-release",
           "clang-oak-release",
+          "clang-oak2-release",
           "msvc-willow-release",
           "msvc-oak-release",
+          "msvc-oak2-release",
         ]
 
     steps:
@@ -66,13 +68,19 @@ jobs:
             container: clang-cross
           - preset: clang-cross-oak-release
             container: clang-cross
+          - preset: clang-cross-oak2-release
+            container: clang-cross
           - preset: llvm-mingw-willow-release
             container: llvm-mingw
           - preset: llvm-mingw-oak-release
             container: llvm-mingw
+          - preset: llvm-mingw-oak2-release
+            container: llvm-mingw
           - preset: mingw-willow-release
             container: mingw
           - preset: mingw-oak-release
+            container: mingw
+          - preset: mingw-oak2-release
             container: mingw
 
     steps:
@@ -113,6 +121,7 @@ jobs:
         preset: [
           "clang-willow-release",
           "clang-oak-release",
+          "clang-oak2-release",
         ]
 
     steps:

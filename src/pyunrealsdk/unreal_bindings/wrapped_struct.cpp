@@ -166,7 +166,7 @@ void register_wrapped_struct(py::module_& mod) {
         .def(
             "_get_field",
             [](const WrappedStruct& self, PyFieldVariant::from_py_type field) {
-                PyFieldVariant var{field};
+                const PyFieldVariant var{field};
                 if (var == nullptr) {
                     throw py::attribute_error("cannot access null attribute");
                 }
@@ -221,7 +221,7 @@ void register_wrapped_struct(py::module_& mod) {
         .def(
             "_set_field",
             [](WrappedStruct& self, PyFieldVariant::from_py_type field, const py::object& value) {
-                PyFieldVariant var{field};
+                const PyFieldVariant var{field};
                 if (var == nullptr) {
                     throw py::attribute_error("cannot access null attribute");
                 }

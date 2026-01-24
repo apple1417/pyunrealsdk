@@ -120,8 +120,7 @@
       },
       "cacheVariables": {
         "EXPLICIT_PYTHON_ARCH": "win32",
-        "UNREALSDK_FLAVOUR": "WILLOW",
-        "UNREALSDK_ARCH": "x86"
+        "UNREALSDK_FLAVOUR": "WILLOW"
       }
     },
     {
@@ -133,8 +132,7 @@
       },
       "cacheVariables": {
         "EXPLICIT_PYTHON_ARCH": "amd64",
-        "UNREALSDK_FLAVOUR": "OAK",
-        "UNREALSDK_ARCH": "x64"
+        "UNREALSDK_FLAVOUR": "OAK"
       }
     },
     {
@@ -146,8 +144,7 @@
       },
       "cacheVariables": {
         "EXPLICIT_PYTHON_ARCH": "amd64",
-        "UNREALSDK_FLAVOUR": "OAK2",
-        "UNREALSDK_ARCH": "x64"
+        "UNREALSDK_FLAVOUR": "OAK2"
       }
     },
     {
@@ -205,6 +202,26 @@
       ]
     },
     {
+      "name": "clang-oak2-debug",
+      "displayName": "Oak2 Debug (Clang)",
+      "inherits": [
+        "_base",
+        "_clang_x64",
+        "_oak2",
+        "_debug"
+      ]
+    },
+    {
+      "name": "clang-oak2-release",
+      "displayName": "Oak2 Release (Clang)",
+      "inherits": [
+        "_base",
+        "_clang_x64",
+        "_oak2",
+        "_release"
+      ]
+    },
+    {
       "name": "clang-cross-willow-debug",
       "displayName": "Willow Debug (Clang Cross Compiler)",
       "inherits": [
@@ -241,6 +258,26 @@
         "_base",
         "_clang_cross_x64",
         "_oak",
+        "_release"
+      ]
+    },
+    {
+      "name": "clang-cross-oak2-debug",
+      "displayName": "Oak2 Debug (Clang Cross Compiler)",
+      "inherits": [
+        "_base",
+        "_clang_cross_x64",
+        "_oak2",
+        "_debug"
+      ]
+    },
+    {
+      "name": "clang-cross-oak2-release",
+      "displayName": "Oak2 Release (Clang Cross Compiler)",
+      "inherits": [
+        "_base",
+        "_clang_cross_x64",
+        "_oak2",
         "_release"
       ]
     },
@@ -285,6 +322,26 @@
       ]
     },
     {
+      "name": "llvm-mingw-oak2-debug",
+      "displayName": "Oak2 Debug (LLVM MinGW)",
+      "inherits": [
+        "_base",
+        "_llvm_mingw_x64",
+        "_oak2",
+        "_debug"
+      ]
+    },
+    {
+      "name": "llvm-mingw-oak2-release",
+      "displayName": "Oak2 Release (LLVM MinGW)",
+      "inherits": [
+        "_base",
+        "_llvm_mingw_x64",
+        "_oak2",
+        "_release"
+      ]
+    },
+    {
       "name": "mingw-willow-debug",
       "displayName": "Willow Debug (MinGW)",
       "inherits": [
@@ -321,6 +378,26 @@
         "_base",
         "_mingw_x64",
         "_oak",
+        "_release"
+      ]
+    },
+    {
+      "name": "mingw-oak2-debug",
+      "displayName": "Oak2 Debug (MinGW)",
+      "inherits": [
+        "_base",
+        "_mingw_x64",
+        "_oak2",
+        "_debug"
+      ]
+    },
+    {
+      "name": "mingw-oak2-release",
+      "displayName": "Oak2 Release (MinGW)",
+      "inherits": [
+        "_base",
+        "_mingw_x64",
+        "_oak2",
         "_release"
       ]
     },

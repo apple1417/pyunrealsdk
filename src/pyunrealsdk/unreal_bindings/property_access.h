@@ -56,14 +56,14 @@ struct PyFieldVariant : public base_variant {
     ~PyFieldVariant(void) = default;
 
 #if UNREALSDK_PROPERTIES_ARE_FFIELD
-    // A type guarenteed to be convertable to this from python.
+    // A type guaranteed to be convertible to this from python.
     using from_py_type =
         std::variant<std::nullptr_t, unrealsdk::unreal::UProperty*, unrealsdk::unreal::UField*>;
 
     PyFieldVariant(const from_py_type& var);
 #else
-    // A type guarenteed to be convertable to this from python.
-    using setter_type = unrealsdk::unreal::UField*;
+    // A type guaranteed to be convertible to this from python.
+    using from_py_type = unrealsdk::unreal::UField*;
 #endif
 
     /**

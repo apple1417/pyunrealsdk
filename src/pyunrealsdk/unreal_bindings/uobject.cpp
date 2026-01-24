@@ -97,7 +97,7 @@ void register_uobject(py::module_& mod) {
         .def(
             "_get_field",
             [](UObject* self, PyFieldVariant::from_py_type field) {
-                PyFieldVariant var{field};
+                const PyFieldVariant var{field};
                 if (var == nullptr) {
                     throw py::attribute_error("cannot access null attribute");
                 }
@@ -159,7 +159,7 @@ void register_uobject(py::module_& mod) {
         .def(
             "_set_field",
             [](UObject* self, PyFieldVariant::from_py_type field, const py::object& value) {
-                PyFieldVariant var{field};
+                const PyFieldVariant var{field};
                 py_setattr_direct(var, reinterpret_cast<uintptr_t>(self), value);
 
                 if (should_notify_counter > 0) {

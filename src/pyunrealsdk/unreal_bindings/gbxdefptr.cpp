@@ -31,7 +31,6 @@ void register_gbxdefptr(py::module_& mod) {
             },
             "The instance data as a WrappedStruct, or None if not available.")
         .def("__repr__", [](const FGbxDefPtr& self) {
-            std::string name_str = self.name;
             return std::format(
                 "GbxDefPtr('{}', {})", self.name,
                 (self.ref == nullptr || self.instance == nullptr) ? "None" : "{...}");
