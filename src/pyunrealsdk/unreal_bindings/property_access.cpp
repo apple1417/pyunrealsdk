@@ -109,6 +109,14 @@ std::vector<std::string> py_dir(const py::object& self, const UStruct* type) {
         auto fields = type->fields();
         std::ranges::transform(fields, std::back_inserter(names),
                                [](auto obj) { return obj->Name(); });
+
+#if UNREALSDK_PROPERTIES_ARE_FFIELD
+        // If properties are UObjects, they're already in the list of UFields. If they're FFields
+        // however, they're not, add them back in.
+        auto props = type->properties();
+        std::ranges::transform(props, std::back_inserter(names),
+                               [](auto obj) { return obj->Name(); });
+#endif
     }
 
     return names;
