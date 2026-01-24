@@ -43,6 +43,14 @@ void register_uobject_children(py::module_& mod) {
     PyUEClass<FFieldClass>(mod, "FFieldClass")
         .def_member_prop("Name", &FFieldClass::Name)
         .def_member_prop("SuperField", &FFieldClass::SuperField)
+        .def("__new__",
+             [](const py::args&, const py::kwargs&) {
+                 throw py::type_error("Cannot create new instances of unreal objects.");
+             })
+        .def("__init__",
+             [](const py::args&, const py::kwargs&) {
+                 throw py::type_error("Cannot create new instances of unreal objects.");
+             })
         .def(
             "__repr__",
             [](FFieldClass* self) {
@@ -52,7 +60,13 @@ void register_uobject_children(py::module_& mod) {
             "Gets this object's full name.\n"
             "\n"
             "Returns:\n"
-            "    This object's name.");
+            "    This object's name.")
+        .def(
+            "_get_address", [](FFieldClass* self) { return reinterpret_cast<uintptr_t>(self); },
+            "Gets the address of this object, for debugging.\n"
+            "\n"
+            "Returns:\n"
+            "    This object's address.");
 
     PyUEClass<FField>(mod, "FField")
         .def_member_prop("Class", &FField::Class)
@@ -74,6 +88,14 @@ void register_uobject_children(py::module_& mod) {
                     self.Owner() = std::get<FField*>(val);
                 }
             })
+        .def("__new__",
+             [](const py::args&, const py::kwargs&) {
+                 throw py::type_error("Cannot create new instances of unreal objects.");
+             })
+        .def("__init__",
+             [](const py::args&, const py::kwargs&) {
+                 throw py::type_error("Cannot create new instances of unreal objects.");
+             })
         .def(
             "__repr__",
             [](FField* self) {
@@ -84,6 +106,12 @@ void register_uobject_children(py::module_& mod) {
             "\n"
             "Returns:\n"
             "    This object's name.")
+        .def(
+            "_get_address", [](FField* self) { return reinterpret_cast<uintptr_t>(self); },
+            "Gets the address of this object, for debugging.\n"
+            "\n"
+            "Returns:\n"
+            "    This object's address.")
         .def("_path_name", &FField::get_path_name,
              "Gets this object's path name, excluding the class.\n"
              "\n"
