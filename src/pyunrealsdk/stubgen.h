@@ -1,0 +1,70 @@
+#ifndef PYUNREALSDK_STUBGEN_H
+#define PYUNREALSDK_STUBGEN_H
+
+/*
+These macros are used to generate the python type stubs - they're easier for us to match than fully
+parsing C++. See also the stubgen readme.
+
+Some macros have a `_N` null macro variant, which expands to nothing.
+*/
+
+/**
+ * @brief Sets what python module the following definitions are in.
+ *
+ * @param name The module's name, as a string.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_MODULE(name) name
+#define PYUNREALSDK_STUBGEN_MODULE_N(name)
+
+/**
+ * @brief Defines an attribute, attaching to the last module or class.
+ *
+ * @param name The attribute's name, as a string.
+ * @param type The type hint to give this attribute, as a string.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_ATTR(name, type) name
+
+/**
+ * @brief Defines a function or method.
+ *
+ * @param name The function's name, as a string.
+ * @param ret The function's python return type, as a string.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_FUNC(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_METHOD(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_STATICMETHOD(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_CLASSMETHOD(name, ret_type) name
+
+/**
+ * @brief Defines a docstring, attaching to the last module, class, function, or method.
+ *
+ * @param name The method's name, as a string.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_DOCSTRING(doc) doc
+
+/**
+ * @brief Defines an arg, attaching to the last function or method.
+ *
+ * @param name The arg's name, as a pybind _a literal.
+ * @param type The arg's type hint, as a string.
+ * @param py_default If this arg has a default value, a string holding it's python equivalent,
+ *                   excluding the equals.
+ * @param ... If this arg has a default value, the cpp version, including the equals.
+ * @return Expands to the name string followed by the cpp default value.
+ */
+#define PYUNREALSDK_STUBGEN_ARG(name, type, py_default, ...) name __VA_ARGS__
+#define PYUNREALSDK_STUBGEN_ARG_N(name, type, py_default, ...)
+
+/**
+ * @brief Marker for where positional-only/keyword-only args start.
+ *
+ * @return Expands to an instance of the relevant pybind type.
+ */
+#define PYUNREALSDK_STUBGEN_POS_ONLY() (py::pos_only{})
+#define PYUNREALSDK_STUBGEN_KW_ONLY() (py::kw_only{})
+
+#endif /* PYUNREALSDK_STUBGEN_H */
