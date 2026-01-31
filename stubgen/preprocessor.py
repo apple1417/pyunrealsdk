@@ -6,13 +6,18 @@ from io import StringIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-# I am slightly overzealous with the pyright ignores so that this will work even if you don't have
+# Being slightly overzealous with the pyright ignores so that this will work even if you don't have
 # pcpp installed in the same enviroment as pyright
 # Even with it installed, it's not type hinted, half of them still need to exist
 from pcpp.preprocessor import (  # pyright: ignore[reportMissingImports, reportMissingTypeStubs]
     Action,  # pyright: ignore[reportUnknownVariableType]
     OutputDirective,  # pyright: ignore[reportUnknownVariableType]
     Preprocessor,  # pyright: ignore[reportUnknownVariableType]
+)
+
+__all__: tuple[str, ...] = (
+    "Flavour",
+    "parse_macros_from_file",
 )
 
 if TYPE_CHECKING:

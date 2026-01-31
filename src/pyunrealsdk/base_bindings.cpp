@@ -198,7 +198,7 @@ void register_base_bindings(py::module_& mod) {
             "    fully_qualified: If the class name is fully qualified, or None (the default)\n"
             "                     to autodetect.\n"
             "Returns:\n"
-            "    The unreal class."),
+            "    The unreal class.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
         PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None", = std::nullopt));
 
@@ -222,7 +222,7 @@ void register_base_bindings(py::module_& mod) {
             "    fully_qualified: If the enum name is fully qualified, or None (the default)\n"
             "                     to autodetect.\n"
             "Returns:\n"
-            "    The unreal enum."),
+            "    The unreal enum.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
         PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None", = std::nullopt));
 
@@ -247,7 +247,7 @@ void register_base_bindings(py::module_& mod) {
             "                     default) to autodetect.\n"
             "    **kwargs: Fields on the struct to initialize.\n"
             "Returns:\n"
-            "    The newly constructed struct."),
+            "    The newly constructed struct.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
         PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None", = std::nullopt),
         PYUNREALSDK_STUBGEN_POS_ONLY());
@@ -274,7 +274,7 @@ void register_base_bindings(py::module_& mod) {
             "         to specify.\n"
             "    name: The object's name.\n"
             "Returns:\n"
-            "    The unreal object."),
+            "    The unreal object.\n"),
         PYUNREALSDK_STUBGEN_ARG("cls"_a, "UClass | str", ),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ));
 
@@ -315,7 +315,7 @@ void register_base_bindings(py::module_& mod) {
             "    exact: If true (the default), only finds exact class matches. If false, also\n"
             "           matches subclasses.\n"
             "Returns:\n"
-            "    An iterator over all instances of the class."),
+            "    An iterator over all instances of the class.\n"),
         PYUNREALSDK_STUBGEN_ARG("cls"_a, "UClass | str", ),
         PYUNREALSDK_STUBGEN_ARG("exact"_a, "bool", "True", = true));
 
@@ -345,7 +345,7 @@ void register_base_bindings(py::module_& mod) {
             "    flags: Object flags to set.\n"
             "    template_obj: The template object to use.\n"
             "Returns:\n"
-            "    The constructed object."),
+            "    The constructed object.\n"),
         PYUNREALSDK_STUBGEN_ARG("cls"_a, "UClass | str", ),
         PYUNREALSDK_STUBGEN_ARG("outer"_a, "UObject | None", ),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", "\"None\"", = FName{0, 0}),
@@ -366,7 +366,7 @@ void register_base_bindings(py::module_& mod) {
             "    name: The package's name.\n"
             "    flags: The loading flags to use.\n"
             "Returns:\n"
-            "    The loaded `Package` object."),
+            "    The loaded `Package` object.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
         PYUNREALSDK_STUBGEN_ARG("flags"_a, "int", "0", = 0));
 

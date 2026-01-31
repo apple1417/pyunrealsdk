@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import ast
 import sys
-from dataclasses import dataclass, field
-from enum import Enum, auto
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .info import ArgInfo, AttrInfo, ClassInfo, FuncInfo, FuncType, InfoDict, ModuleInfo
 from .preprocessor import Flavour, parse_macros_from_file
 
 if TYPE_CHECKING:
@@ -14,62 +13,11 @@ if TYPE_CHECKING:
 
     from .preprocessor import ArgTokens, LexToken
 
-__all__: tuple[str, ...] = (
-    "ArgInfo",
-    "AttrInfo",
-    "ClassInfo",
-    "FuncInfo",
-    "FuncType",
-    "ModuleInfo",
-    "gathered_info",
-    "parse_file",
-)
+__all__: tuple[str, ...] = ("parse_file",)
 
 
-gathered_info: dict[str, ModuleInfo | AttrInfo | FuncInfo | ClassInfo] = {}
+gathered_info: InfoDict = {}
 context_stack: list[ModuleInfo | FuncInfo | ClassInfo] = []
-
-
-@dataclass
-class ModuleInfo:
-    name: str
-    docstring: str | None = None
-
-
-@dataclass
-class AttrInfo:
-    name: str
-    type_hint: str
-
-
-@dataclass
-class ArgInfo:
-    name: str
-    type_hint: str | None  # Should only be none on self/cls and the pos-only/kw-only markers
-    default: str | None
-
-
-class FuncType(Enum):
-    Func = auto()
-    Method = auto()
-    StaticMethod = auto()
-    ClassMethod = auto()
-
-
-@dataclass
-class FuncInfo:
-    func_type: FuncType
-    name: str
-    ret: str
-    args: list[ArgInfo] = field(default_factory=list)
-    docstring: str | None = None
-
-
-@dataclass
-class ClassInfo:
-    name: str
-    docstring: str | None = None
-    # TODO
 
 
 def parse_string(tokens: Sequence[LexToken]) -> str:
@@ -118,6 +66,9 @@ def parse_docstring(args: Sequence[ArgTokens]) -> None:
     """
     assert len(args) == 1, "expected one arg"
     docstring = parse_string(args[0])
+
+    if "\n" in docstring:
+        assert docstring[-1] == "\n", "expected multiline docstring to end with a newline"
 
     assert isinstance(context_stack[-1], ModuleInfo | FuncInfo | ClassInfo), (
         "can only add docstrings to a module, function, or class"
@@ -187,14 +138,19 @@ def parse_arg(args: Sequence[ArgTokens]) -> None:
     context_stack[-1].args.append(ArgInfo(name, type_hint, default))
 
 
-def parse_file(path: Path, flavour: Flavour) -> None:  # noqa: C901
+def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
     """
-    Parses all data out of the given file, and adds it to 'gathered_info'.
+    Parses all data out of the given file.
 
     Args:
         path: The file to parse.
         flavour: What SDK flavour to parse using.
+    Returns:
+        The parsed info.
     """
+    gathered_info.clear()
+    context_stack.clear()
+
     for macro, args in parse_macros_from_file(path, flavour):
         try:
             match macro.name.removesuffix("_N"):
@@ -211,7 +167,7 @@ def parse_file(path: Path, flavour: Flavour) -> None:  # noqa: C901
                 case "PYUNREALSDK_STUBGEN_ARG":
                     parse_arg(args)
                 case "PYUNREALSDK_STUBGEN_POS_ONLY" | "PYUNREALSDK_STUBGEN_KW_ONLY":
-                    assert not args, "expected no args"
+                    assert len(args) == 1 and not args[0], "expected no args"
                     assert isinstance(context_stack[-1], FuncInfo), (
                         "tried to add an arg marker outside of a function"
                     )
@@ -233,3 +189,5 @@ def parse_file(path: Path, flavour: Flavour) -> None:  # noqa: C901
                 path_str = str(path)
             sys.stderr.write(f"Failed to parse macro from {path_str}:\n{macro} {args}\n")
             raise ex
+
+    return gathered_info
