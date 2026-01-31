@@ -1,5 +1,6 @@
 #include "pyunrealsdk/pch.h"
 #include "pyunrealsdk/unreal_bindings/bindings.h"
+#include "pyunrealsdk/stubgen.h"
 #include "pyunrealsdk/unreal_bindings/bound_function.h"
 #include "pyunrealsdk/unreal_bindings/gbxdefptr.h"
 #include "pyunrealsdk/unreal_bindings/persistent_object_ptr_property.h"
@@ -22,7 +23,7 @@ using namespace unrealsdk::unreal;
 namespace pyunrealsdk::unreal {
 
 void register_module(py::module_& mod) {
-    auto unreal = mod.def_submodule("unreal");
+    auto unreal = mod.def_submodule(PYUNREALSDK_STUBGEN_SUBMODULE("unrealsdk", "unreal"));
 
     register_property_helpers(unreal);
 

@@ -4,6 +4,7 @@
 #include "pyunrealsdk/hooks.h"
 #include "pyunrealsdk/logging.h"
 #include "pyunrealsdk/static_py_object.h"
+#include "pyunrealsdk/stubgen.h"
 #include "pyunrealsdk/unreal_bindings/property_access.h"
 #include "unrealsdk/hook_manager.h"
 #include "unrealsdk/unreal/cast.h"
@@ -118,7 +119,7 @@ bool handle_py_hook(Details& hook, const py::object& callback) {
 }  // namespace
 
 void register_module(py::module_& mod) {
-    auto hooks = mod.def_submodule("hooks");
+    auto hooks = mod.def_submodule(PYUNREALSDK_STUBGEN_SUBMODULE("unrealsdk", "hooks"));
 
     py::enum_<Type>(hooks, "Type", "Enum of possible hook types.")
         .value("PRE", Type::PRE, "Called before running the hooked function.")

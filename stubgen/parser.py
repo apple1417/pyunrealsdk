@@ -36,6 +36,18 @@ def parse_string(tokens: Sequence[LexToken]) -> str:
     return ast.literal_eval("".join(t.value for t in tokens if t.type != "CPP_WS"))
 
 
+def _create_module(full_name: str) -> None:
+    module: ModuleInfo
+    if (existing := gathered_info.get(full_name)) is not None:
+        assert isinstance(existing, ModuleInfo), f"module has same name as existing {existing}"
+        module = existing
+    else:
+        module = ModuleInfo(full_name)
+        gathered_info[full_name] = module
+
+    context_stack[:] = [module]
+
+
 def parse_module(args: Sequence[ArgTokens]) -> None:
     """
     Parses a PYUNREALSDK_STUBGEN_MODULE macro.
@@ -45,16 +57,20 @@ def parse_module(args: Sequence[ArgTokens]) -> None:
     """
     assert len(args) == 1, "expected one arg"
     name = parse_string(args[0])
+    _create_module(name)
 
-    module: ModuleInfo
-    if (existing := gathered_info.get(name)) is not None:
-        assert isinstance(existing, ModuleInfo), f"module has same name as existing {existing}"
-        module = existing
-    else:
-        module = ModuleInfo(name)
-        gathered_info[name] = module
 
-    context_stack[:] = [module]
+def parse_submodule(args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_SUBMODULE macro.
+
+    Args:
+        args: The macro's args.
+    """
+    assert len(args) == 2, "expected two args"  # noqa: PLR2004
+    outer = parse_string(args[0])
+    name = parse_string(args[1])
+    _create_module(outer + "." + name)
 
 
 def parse_docstring(args: Sequence[ArgTokens]) -> None:
@@ -156,6 +172,8 @@ def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
             match macro.name.removesuffix("_N"):
                 case "PYUNREALSDK_STUBGEN_MODULE":
                     parse_module(args)
+                case "PYUNREALSDK_STUBGEN_SUBMODULE":
+                    parse_submodule(args)
                 case "PYUNREALSDK_STUBGEN_DOCSTRING":
                     parse_docstring(args)
                 case "PYUNREALSDK_STUBGEN_ATTR":

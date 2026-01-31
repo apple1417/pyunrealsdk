@@ -64,20 +64,24 @@ class CustomPreprocessor(Preprocessor):  # pyright: ignore[reportUntypedBaseClas
         self.allowed_includes = []
 
     # Then need to overwrite these 4 methods to make everything passthrough
-    def on_include_not_found(self, *_args: Any, **_kwargs: Any) -> None:  # noqa: D102  # pyright: ignore[reportIncompatibleMethodOverride]
+    def on_include_not_found(self, *_args: Any, **_kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         raise OutputDirective(Action.IgnoreAndPassThrough)  # pyright: ignore[reportUnknownMemberType]
 
-    def on_unknown_macro_in_defined_expr(self, *_args: Any, **_kwargs: Any) -> None:  # noqa: D102  # pyright: ignore[reportIncompatibleMethodOverride]
+    def on_unknown_macro_in_defined_expr(self, *_args: Any, **_kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         return None
 
-    def on_unknown_macro_in_expr(self, *_args: Any, **_kwargs: Any) -> None:  # noqa: D102  # pyright: ignore[reportIncompatibleMethodOverride]
+    def on_unknown_macro_in_expr(self, *_args: Any, **_kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         return None
 
-    def on_unknown_macro_function_in_expr(self, *_args: Any, **_kwargs: Any) -> None:  # noqa: D102  # pyright: ignore[reportIncompatibleMethodOverride]:
+    def on_unknown_macro_function_in_expr(self, *_args: Any, **_kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]:
+        return None
+
+    # And overwrite this one to suppress the default #error handling
+    def on_directive_unknown(self, *_args: Any, **_kwargs: Any) -> None:
         return None
 
     # Hijack the include system to ignore most of them
-    def include(  # noqa: D102
+    def include(
         self,
         tokens: Sequence[LexToken],
         *_args: Any,
@@ -89,7 +93,7 @@ class CustomPreprocessor(Preprocessor):  # pyright: ignore[reportUntypedBaseClas
         raise OutputDirective(Action.IgnoreAndPassThrough)  # pyright: ignore[reportUnknownMemberType]
 
     # Hijack macro expansion to record them as they pass
-    def macro_expand_args(  # noqa: D102  # pyright: ignore[reportIncompatibleMethodOverride]:
+    def macro_expand_args(  # pyright: ignore[reportIncompatibleMethodOverride]:
         self,
         macro: Macro,
         args: Sequence[ArgTokens],

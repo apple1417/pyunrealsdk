@@ -3,6 +3,7 @@
 #include "pyunrealsdk/debugging.h"
 #include "pyunrealsdk/logging.h"
 #include "pyunrealsdk/static_py_object.h"
+#include "pyunrealsdk/stubgen.h"
 #include "unrealsdk/commands.h"
 #include "unrealsdk/config.h"
 #include "unrealsdk/utils.h"
@@ -104,7 +105,7 @@ void py_cmd_handler(const wchar_t* line, size_t size, size_t cmd_len) {
 }  // namespace
 
 void register_module(py::module_& mod) {
-    auto commands = mod.def_submodule("commands");
+    auto commands = mod.def_submodule(PYUNREALSDK_STUBGEN_SUBMODULE("unrealsdk", "commands"));
 
     commands.def(
         "add_command",

@@ -11,11 +11,17 @@ Some macros have a `_N` null macro variant, which expands to nothing.
 /**
  * @brief Sets what python module the following definitions are in.
  *
+ * @note PYUNREALSDK_STUBGEN_MODULE("a.b.c") and PYUNREALSDK_STUBGEN_SUBMODULE("a.b", "c") set
+ *       equivalent modules, but expand to different strings.
+ *
+ * @param outer (If available) the full outer module path, as a string.
  * @param name The module's name, as a string.
  * @return Expands to the name string.
  */
 #define PYUNREALSDK_STUBGEN_MODULE(name) name
 #define PYUNREALSDK_STUBGEN_MODULE_N(name)
+#define PYUNREALSDK_STUBGEN_SUBMODULE(outer, name) name
+#define PYUNREALSDK_STUBGEN_SUBMODULE_N(outer, name)
 
 /**
  * @brief Defines an attribute, attaching to the last module or class.

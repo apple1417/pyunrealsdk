@@ -1,5 +1,6 @@
 #include "pyunrealsdk/pch.h"
 #include "pyunrealsdk/logging.h"
+#include "pyunrealsdk/stubgen.h"
 #include "unrealsdk/logging.h"
 #include "unrealsdk/unrealsdk.h"
 
@@ -139,7 +140,7 @@ void register_per_log_level_printer(py::module_& logging,
 #ifdef PYUNREALSDK_INTERNAL
 
 void register_module(py::module_& mod) {
-    auto logging = mod.def_submodule("logging");
+    auto logging = mod.def_submodule(PYUNREALSDK_STUBGEN_SUBMODULE("unrealsdk", "logging"));
 
     py::enum_<Level>(logging, "Level", "Enum of valid logging levels.")
         .value("ERROR", Level::ERROR, "Used to display error messages.")

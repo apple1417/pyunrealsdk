@@ -7,28 +7,18 @@ from . import commands, hooks, logging, unreal
 from .unreal import UClass, UObject, WrappedStruct
 from .unreal._uenum import _GenericUnrealEnum  # pyright: ignore[reportPrivateUsage]
 
-__all__: tuple[str, ...] = (
-    "__version__",
-    "__version_info__",
-    "commands",
-    "construct_object",
-    "find_all",
-    "find_class",
-    "find_enum",
-    "find_object",
-    "hooks",
-    "logging",
-    "make_struct",
-    "unreal",
-)
+{{ "unrealsdk" | __all__ }}
 
-__version__: str
-__version_info__: tuple[int, int, int]
+{% set attrs = [
+    "unrealsdk.__version__",
+    "unrealsdk.__version_info__",
+] %}
+{{ attrs | declare_all }}
 
 # The contents of the unrealsdk.toml config file, parsed and merged for you
 {{ "unrealsdk.config" | declare }}
 
-{% set all_funcs = [
+{% set funcs = [
     "unrealsdk.construct_object",
     "unrealsdk.find_all",
     "unrealsdk.find_class",
@@ -37,8 +27,5 @@ __version_info__: tuple[int, int, int]
     "unrealsdk.load_package",
     "unrealsdk.make_struct",
 ] %}
-
-{% for func in all_funcs | sort %}
-{{ func | declare }}
-{% endfor %}
+{{ funcs | declare_all }}
 

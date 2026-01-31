@@ -25,7 +25,9 @@ class ModuleInfo:
 
     def declare(self) -> str:
         if self.docstring:
-            return f'"""\n{self.docstring}\n"""'
+            if "\n" in self.docstring:
+                return f'"""\n{self.docstring}\n"""'
+            return f'"""{self.docstring}"""'
         return ""
 
 
