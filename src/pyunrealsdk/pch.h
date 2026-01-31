@@ -23,9 +23,11 @@
 #ifdef __cplusplus
 
 #include <pybind11/embed.h>
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
+#include <pybind11/warnings.h>
 
 // NOLINTNEXTLINE(misc-unused-alias-decls)
 namespace py = pybind11;
@@ -39,8 +41,6 @@ using namespace pybind11::literals;
 #else
 #define PY_OBJECT_VISIBILITY
 #endif
-
-#include <variant>
 
 // Type casters need to be defined the same way in every file, so best to put here
 #include "pyunrealsdk/type_casters.h"

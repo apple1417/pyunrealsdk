@@ -121,12 +121,13 @@ bool handle_py_hook(Details& hook, const py::object& callback) {
 void register_module(py::module_& mod) {
     auto hooks = mod.def_submodule(PYUNREALSDK_STUBGEN_SUBMODULE("unrealsdk", "hooks"));
 
-    py::enum_<Type>(hooks, "Type", "Enum of possible hook types.")
+    py::native_enum<Type>(hooks, "Type", "enum.Enum", "Enum of possible hook types.")
         .value("PRE", Type::PRE, "Called before running the hooked function.")
         .value("POST", Type::POST,
                "Called after the hooked function, but only if it was allowed to run.")
         .value("POST_UNCONDITIONAL", Type::POST_UNCONDITIONAL,
-               "Called after the hooked function, even if it got blocked.");
+               "Called after the hooked function, even if it got blocked.")
+        .finalize();
 
     py::class_<Block>(
         hooks, "Block",
@@ -161,13 +162,10 @@ void register_module(py::module_& mod) {
     hooks.def(
         "inject_next_call",
         []() {
-            if (PyErr_WarnEx(PyExc_DeprecationWarning,
-                             "inject_next_call is deprecated, use the"
-                             " prevent_hooking_direct_calls() context manager instead.",
-                             1)
-                == -1) {
-                throw pybind11::error_already_set();
-            }
+            py::warnings::warn(
+                "inject_next_call is deprecated, use the prevent_hooking_direct_calls() context "
+                "manager instead.",
+                PyExc_DeprecationWarning, 1);
             inject_next_call();
         },
         "Makes the next unreal function call completely ignore hooks.\n"

@@ -142,14 +142,15 @@ void register_per_log_level_printer(py::module_& logging,
 void register_module(py::module_& mod) {
     auto logging = mod.def_submodule(PYUNREALSDK_STUBGEN_SUBMODULE("unrealsdk", "logging"));
 
-    py::enum_<Level>(logging, "Level", "Enum of valid logging levels.")
+    py::native_enum<Level>(logging, "Level", "enum.Enum", "Enum of valid logging levels.")
         .value("ERROR", Level::ERROR, "Used to display error messages.")
         .value("WARNING", Level::WARNING, "Used to display warnings.")
         .value("INFO", Level::INFO,
                "Default logging level, used for anything that should be shown in console.")
         .value("DEV_WARNING", Level::DEV_WARNING,
                "Used for warnings which don't concern users, so shouldn't be shown in console.")
-        .value("MISC", Level::MISC, "Used for miscellaneous debug messages.");
+        .value("MISC", Level::MISC, "Used for miscellaneous debug messages.")
+        .finalize();
 
     py::class_<Logger>(logging, "Logger",
                        "A write only file object which redirects to the unrealsdk log system.")
