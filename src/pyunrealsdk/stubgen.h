@@ -5,7 +5,7 @@
 These macros are used to generate the python type stubs - they're easier for us to match than fully
 parsing C++. See also the stubgen readme.
 
-Some macros have a `_N` null macro variant, which expands to nothing.
+All macros have a `_N` null macro variant, which expands to nothing.
 */
 
 /**
@@ -24,33 +24,39 @@ Some macros have a `_N` null macro variant, which expands to nothing.
 #define PYUNREALSDK_STUBGEN_SUBMODULE_N(outer, name)
 
 /**
- * @brief Defines an attribute, attaching to the last module or class.
+ * @brief Defines an attribute, attaching to the last class, enum, or module.
  *
  * @param name The attribute's name, as a string.
  * @param type The type hint to give this attribute, as a string.
  * @return Expands to the name string.
  */
 #define PYUNREALSDK_STUBGEN_ATTR(name, type) name
+#define PYUNREALSDK_STUBGEN_ATTR_N(name, type)
 
 /**
- * @brief Defines a function or method.
+ * @brief Defines a function or method, attaching to the last module or class
  *
  * @param name The function's name, as a string.
  * @param ret The function's python return type, as a string.
  * @return Expands to the name string.
  */
 #define PYUNREALSDK_STUBGEN_FUNC(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_FUNC_N(name, ret_type)
 #define PYUNREALSDK_STUBGEN_METHOD(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_METHOD_N(name, ret_type)
 #define PYUNREALSDK_STUBGEN_STATICMETHOD(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_STATICMETHOD_N(name, ret_type)
 #define PYUNREALSDK_STUBGEN_CLASSMETHOD(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_CLASSMETHOD_N(name, ret_type)
 
 /**
- * @brief Defines a docstring, attaching to the last module, class, function, or method.
+ * @brief Defines a docstring, attaching to the last relevant element.
  *
  * @param name The method's name, as a string.
  * @return Expands to the name string.
  */
 #define PYUNREALSDK_STUBGEN_DOCSTRING(doc) doc
+#define PYUNREALSDK_STUBGEN_DOCSTRING_N(doc)
 
 /**
  * @brief Defines an arg, attaching to the last function or method.
@@ -66,11 +72,32 @@ Some macros have a `_N` null macro variant, which expands to nothing.
 #define PYUNREALSDK_STUBGEN_ARG_N(name, type, py_default, ...)
 
 /**
- * @brief Marker for where positional-only/keyword-only args start.
+ * @brief Marker for where pos-only/kw-only args start, attaching to the last function or method.
  *
  * @return Expands to an instance of the relevant pybind type.
  */
 #define PYUNREALSDK_STUBGEN_POS_ONLY() (py::pos_only{})
+#define PYUNREALSDK_STUBGEN_POS_ONLY_N()
 #define PYUNREALSDK_STUBGEN_KW_ONLY() (py::kw_only{})
+#define PYUNREALSDK_STUBGEN_KW_ONLY_N()
+
+/**
+ * @brief Defines an enum.
+ *
+ * @param name The enum's name, as a string.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_ENUM(name) name
+#define PYUNREALSDK_STUBGEN_ENUM_N(name)
+
+/**
+ * @brief Defines a class.
+ *
+ * @param name The class's name, as a string.
+ * @param super If the class's superclass as a string, if it has one.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_CLASS(name, super) name
+#define PYUNREALSDK_STUBGEN_CLASS_N(name, super)
 
 #endif /* PYUNREALSDK_STUBGEN_H */

@@ -1,6 +1,7 @@
 import subprocess
 from collections.abc import Sequence
 from pathlib import Path
+from pprint import pprint
 
 # Being slightly overzealous with the pyright ignores so that this will work even if you don't have
 # jinja installed in the same enviroment as pyright
@@ -10,7 +11,7 @@ from jinja2 import (  # pyright: ignore[reportMissingImports]
     select_autoescape,  # pyright: ignore[reportUnknownVariableType]
 )
 
-from .info import InfoDict
+from .info import InfoDict, ModuleInfo
 
 __all__: tuple[str, ...] = ("render_stubs",)
 
@@ -59,6 +60,14 @@ def render_stubs(output_dir: Path, info: InfoDict) -> None:
         output = (output_dir / name).with_suffix("")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
         output.parent.mkdir(parents=True, exist_ok=True)  # pyright: ignore[reportUnknownMemberType]
         output.write_text(template.render())  # pyright: ignore[reportUnknownMemberType]
+
+    # Allow not rendering modules if they don't have a docstring
+    remaining = {
+        k: v for k, v in info.items() if not (isinstance(v, ModuleInfo) and v.docstring is None)
+    }
+    if remaining:
+        pprint(remaining, width=180)  # noqa: T203
+        assert not remaining, "above entries weren't consumed by tempaltes"
 
     subprocess.run(["ruff", "format", output_dir], check=True)
     subprocess.run(["ruff", "check", "--fix", output_dir], check=True)

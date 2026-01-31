@@ -3,9 +3,20 @@ from __future__ import annotations
 import ast
 import sys
 from pathlib import Path
+from pyclbr import Class
 from typing import TYPE_CHECKING
 
-from .info import ArgInfo, AttrInfo, ClassInfo, FuncInfo, FuncType, InfoDict, ModuleInfo
+from .info import (
+    ArgInfo,
+    AttrInfo,
+    ClassInfo,
+    EnumInfo,
+    EnumValueInfo,
+    FuncInfo,
+    FuncType,
+    InfoDict,
+    ModuleInfo,
+)
 from .preprocessor import Flavour, parse_macros_from_file
 
 if TYPE_CHECKING:
@@ -17,7 +28,7 @@ __all__: tuple[str, ...] = ("parse_file",)
 
 
 gathered_info: InfoDict = {}
-context_stack: list[ModuleInfo | FuncInfo | ClassInfo] = []
+context_stack: list[ClassInfo | EnumInfo | EnumValueInfo | FuncInfo | ModuleInfo] = []
 
 
 def parse_string(tokens: Sequence[LexToken]) -> str:
@@ -86,15 +97,19 @@ def parse_docstring(args: Sequence[ArgTokens]) -> None:
     if "\n" in docstring:
         assert docstring[-1] == "\n", "expected multiline docstring to end with a newline"
 
-    assert isinstance(context_stack[-1], ModuleInfo | FuncInfo | ClassInfo), (
-        "can only add docstrings to a module, function, or class"
+    assert isinstance(
+        context_stack[-1],
+        ClassInfo | EnumInfo | EnumValueInfo | FuncInfo | ModuleInfo,
+    ), "can only add docstrings to a class, enum, function, or module"
+    assert context_stack[-1].docstring is None, (
+        "tried to add docstring to object that already has one"
     )
     context_stack[-1].docstring = docstring
 
 
-def parse_attr(args: Sequence[ArgTokens]) -> None:
+def parse_module_attr(args: Sequence[ArgTokens]) -> None:
     """
-    Parses a PYUNREALSDK_STUBGEN_ATTR macro.
+    Parses a PYUNREALSDK_STUBGEN_ATTR macro at module level.
 
     Args:
         args: The macro's args.
@@ -103,13 +118,48 @@ def parse_attr(args: Sequence[ArgTokens]) -> None:
     name = parse_string(args[0])
     type_hint = parse_string(args[1])
 
-    while not isinstance(context_stack[-1], ModuleInfo | ClassInfo):
+    while not isinstance(context_stack[-1], ModuleInfo):
         context_stack.pop()
 
     full_name = ".".join(x.name for x in context_stack) + "." + name
 
     assert full_name not in gathered_info, f"got duplicate attribute {full_name}"
     gathered_info[full_name] = AttrInfo(name, type_hint)
+
+
+def parse_class_attr(args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_ATTR macro inside a class.
+
+    Args:
+        args: The macro's args.
+    """
+    assert len(args) == 2, "expected two args"  # noqa: PLR2004
+    name = parse_string(args[0])
+    type_hint = parse_string(args[1])
+
+    assert isinstance(context_stack[-1], ClassInfo)  # guarenteed by caller
+    context_stack[-1].attrs.append(AttrInfo(name, type_hint))
+
+
+def parse_enum_attr(args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_ATTR macro inside an enum.
+
+    Args:
+        args: The macro's args.
+    """
+    assert len(args) == 2, "expected two args"  # noqa: PLR2004
+    name = parse_string(args[0])
+    assert len(args[1]) == 0, "expected second arg to be empty"
+
+    while isinstance(context_stack[-1], EnumValueInfo):
+        context_stack.pop()
+    assert isinstance(context_stack[-1], EnumInfo)  # guarenteed by caller
+
+    value = EnumValueInfo(name)
+    context_stack[-1].values.append(value)
+    context_stack.append(value)
 
 
 def parse_func(args: Sequence[ArgTokens], func_type: FuncType) -> None:
@@ -124,11 +174,27 @@ def parse_func(args: Sequence[ArgTokens], func_type: FuncType) -> None:
     name = parse_string(args[0])
     ret = parse_string(args[1])
 
-    full_name = ".".join(x.name for x in context_stack) + "." + name
+    outer_type = ModuleInfo if func_type is FuncType.Func else ClassInfo
+    while not isinstance(context_stack[-1], outer_type):
+        context_stack.pop()
 
-    assert full_name not in gathered_info, f"got duplicate function {full_name}"
     func = FuncInfo(func_type, name, ret)
-    gathered_info[full_name] = func
+    match func_type:
+        case FuncType.Func:
+            full_name = ".".join(x.name for x in context_stack) + "." + name
+            assert full_name not in gathered_info, f"got duplicate function {full_name}"
+            gathered_info[full_name] = func
+        case FuncType.Method:
+            func.args.append(ArgInfo("self", None, None))
+        case FuncType.StaticMethod:
+            pass
+        case FuncType.ClassMethod:
+            func.args.append(ArgInfo("cls", None, None))
+
+    if func_type != FuncType.Func:
+        assert isinstance(context_stack[-1], ClassInfo)
+        context_stack[-1].methods.append(func)
+
     context_stack.append(func)
 
 
@@ -154,6 +220,70 @@ def parse_arg(args: Sequence[ArgTokens]) -> None:
     context_stack[-1].args.append(ArgInfo(name, type_hint, default))
 
 
+def parse_pos_only_kw_only(macro_name: str, args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_POS_ONLY or PYUNREALSDK_STUBGEN_KW_ONLY macro.
+
+    Args:
+        macro_name: The name of the macro being parsed.
+        args: The macro's args.
+    """
+    assert len(args) == 1 and not args[0], "expected no args"
+    assert isinstance(context_stack[-1], FuncInfo), (
+        "tried to add an arg marker outside of a function"
+    )
+    context_stack[-1].args.append(
+        ArgInfo(
+            "/" if macro_name == "PYUNREALSDK_STUBGEN_POS_ONLY" else "*",
+            None,
+            None,
+        ),
+    )
+
+
+def parse_enum(args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_ENUM macro.
+
+    Args:
+        args: The macro's args.
+    """
+    assert len(args) == 1, "expected one arg"
+    name = parse_string(args[0])
+
+    while not isinstance(context_stack[-1], ModuleInfo):
+        context_stack.pop()
+
+    full_name = ".".join(x.name for x in context_stack) + "." + name
+    assert full_name not in gathered_info, f"got duplicate enum {full_name}"
+
+    enum = EnumInfo(name)
+    gathered_info[full_name] = enum
+    context_stack.append(enum)
+
+
+def parse_class(args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_CLASS macro.
+
+    Args:
+        args: The macro's args.
+    """
+    assert len(args) == 2, "expected two args"  # noqa: PLR2004
+    name = parse_string(args[0])
+    super_class = parse_string(args[1]) if args[1] else None
+
+    while not isinstance(context_stack[-1], ModuleInfo):
+        context_stack.pop()
+
+    full_name = ".".join(x.name for x in context_stack) + "." + name
+    assert full_name not in gathered_info, f"got duplicate class {full_name}"
+
+    cls = ClassInfo(name, super_class)
+    gathered_info[full_name] = cls
+    context_stack.append(cls)
+
+
 def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
     """
     Parses all data out of the given file.
@@ -169,7 +299,8 @@ def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
 
     for macro, args in parse_macros_from_file(path, flavour):
         try:
-            match macro.name.removesuffix("_N"):
+            macro_name = macro.name.removesuffix("_N")
+            match macro_name:
                 case "PYUNREALSDK_STUBGEN_MODULE":
                     parse_module(args)
                 case "PYUNREALSDK_STUBGEN_SUBMODULE":
@@ -177,25 +308,32 @@ def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
                 case "PYUNREALSDK_STUBGEN_DOCSTRING":
                     parse_docstring(args)
                 case "PYUNREALSDK_STUBGEN_ATTR":
-                    parse_attr(args)
-                case "PYUNREALSDK_STUBGEN_FUNC":
-                    while not isinstance(context_stack[-1], ModuleInfo):
+                    while isinstance(context_stack[-1], FuncInfo):
                         context_stack.pop()
+
+                    match context_stack[-1]:
+                        case EnumInfo() | EnumValueInfo():
+                            parse_enum_attr(args)
+                        case ClassInfo():
+                            parse_class_attr(args)
+                        case _:
+                            parse_module_attr(args)
+                case "PYUNREALSDK_STUBGEN_FUNC":
                     parse_func(args, FuncType.Func)
+                case "PYUNREALSDK_STUBGEN_METHOD":
+                    parse_func(args, FuncType.Method)
+                case "PYUNREALSDK_STUBGEN_STATICMETHOD":
+                    parse_func(args, FuncType.StaticMethod)
+                case "PYUNREALSDK_STUBGEN_CLASSMETHOD":
+                    parse_func(args, FuncType.ClassMethod)
                 case "PYUNREALSDK_STUBGEN_ARG":
                     parse_arg(args)
                 case "PYUNREALSDK_STUBGEN_POS_ONLY" | "PYUNREALSDK_STUBGEN_KW_ONLY":
-                    assert len(args) == 1 and not args[0], "expected no args"
-                    assert isinstance(context_stack[-1], FuncInfo), (
-                        "tried to add an arg marker outside of a function"
-                    )
-                    context_stack[-1].args.append(
-                        ArgInfo(
-                            "/" if macro.name == "PYUNREALSDK_STUBGEN_POS_ONLY" else "*",
-                            None,
-                            None,
-                        ),
-                    )
+                    parse_pos_only_kw_only(macro_name, args)
+                case "PYUNREALSDK_STUBGEN_ENUM":
+                    parse_enum(args)
+                case "PYUNREALSDK_STUBGEN_CLASS":
+                    parse_class(args)
                 case _:
                     assert not macro.name.startswith("PYUNREALSDK_STUBGEN"), (
                         "encountered unknown stubgen macro"
