@@ -205,13 +205,13 @@ void register_uobject_children(py::module_& mod) {
                 auto ret = self->find(name);
 
                 // UFields are UObjects
-                auto field = ret.as_obj();
+                auto field = ret.as_uobject();
                 if (field != nullptr) {
                     return py::cast(field);
                 }
 
                 // Properties might be FFields (if enabled)
-                auto prop = ret.as_field();
+                auto prop = ret.as_ffield();
                 if (prop != nullptr) {
                     return py::cast(prop);
                 }

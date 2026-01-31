@@ -48,7 +48,7 @@ PyFieldVariant::PyFieldVariant(const std::variant<std::nullptr_t, UProperty*, UF
 #endif
 
 UProperty* PyFieldVariant::as_prop(void) const {
-    auto prop = this->as_field();
+    auto prop = this->as_ffield();
     if (prop != nullptr) {
 #if UNREALSDK_PROPERTIES_ARE_FFIELD
         return prop;
@@ -58,7 +58,7 @@ UProperty* PyFieldVariant::as_prop(void) const {
 #endif
     }
 
-    auto obj = this->as_obj();
+    auto obj = this->as_uobject();
     if (obj == nullptr) {
         return nullptr;
     }
@@ -69,7 +69,7 @@ UProperty* PyFieldVariant::as_prop(void) const {
     return nullptr;
 }
 UField* PyFieldVariant::as_non_prop_field(void) const {
-    auto obj = this->as_obj();
+    auto obj = this->as_uobject();
     if (obj == nullptr) {
         return nullptr;
     }
