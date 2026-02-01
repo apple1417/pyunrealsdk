@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from ._bound_function import BoundFunction
+from ._gbxdefptr import GbxDefPtr
 from ._uenum import UEnum
 from ._uobject import UObject, notify_changes
 from ._uobject_children import (
+    FField,
+    FFieldClass,
+    FGbxDefPtrProperty,
     UArrayProperty,
     UBlueprintGeneratedClass,
     UBoolProperty,

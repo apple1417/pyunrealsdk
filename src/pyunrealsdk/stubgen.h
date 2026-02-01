@@ -32,6 +32,8 @@ All macros have a `_N` null macro variant, which expands to nothing.
  */
 #define PYUNREALSDK_STUBGEN_ATTR(name, type) name
 #define PYUNREALSDK_STUBGEN_ATTR_N(name, type)
+#define PYUNREALSDK_STUBGEN_READONLY_PROP(name, type) name
+#define PYUNREALSDK_STUBGEN_READONLY_PROP_N(name, type)
 
 /**
  * @brief Defines a function or method, attaching to the last module or class

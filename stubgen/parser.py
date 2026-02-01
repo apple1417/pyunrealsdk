@@ -165,6 +165,24 @@ def parse_enum_attr(args: Sequence[ArgTokens]) -> None:
     context_stack.append(value)
 
 
+def parse_readonly_prop(args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_READONLY_PROP macro inside a class.
+
+    Args:
+        args: The macro's args.
+    """
+    assert len(args) == 2, "expected two args"  # noqa: PLR2004
+    name = parse_string(args[0])
+    type_hint = parse_string(args[1])
+
+    while isinstance(context_stack[-1], FuncInfo):
+        context_stack.pop()
+
+    assert isinstance(context_stack[-1], ClassInfo), "got a property outside of a class"
+    context_stack[-1].attrs.append(AttrInfo(name, type_hint, readonly_prop=True))
+
+
 def parse_func(args: Sequence[ArgTokens], func_type: FuncType) -> None:
     """
     Parses one of the various function stubgen macros.
@@ -352,6 +370,8 @@ def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
                             parse_class_attr(args)
                         case _:
                             parse_module_attr(args)
+                case "PYUNREALSDK_STUBGEN_READONLY_PROP":
+                    parse_readonly_prop(args)
                 case "PYUNREALSDK_STUBGEN_FUNC":
                     parse_func(args, FuncType.Func)
                 case "PYUNREALSDK_STUBGEN_METHOD":

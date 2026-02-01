@@ -78,8 +78,15 @@ class ModuleInfo:
 class AttrInfo:
     name: str
     type_hint: str
+    readonly_prop: bool = False
 
     def declare(self) -> str:
+        if self.readonly_prop:
+            output = f"@property\ndef {self.name}(self) -> {self.type_hint}: ..."
+            if not self.name.islower():
+                # Allow uppercase names - we treat unreal attributes as uppercase
+                output += "  # noqa: N802"
+            return output
         return f"{self.name}: {self.type_hint}"
 
 
@@ -160,7 +167,7 @@ class ClassInfo:
             output += "\n"
 
         for attr in self.attrs:
-            output += f"    {attr.declare()}\n"
+            output += textwrap.indent(attr.declare(), "    ") + "\n"
         if self.attrs:
             output += "\n"
 
