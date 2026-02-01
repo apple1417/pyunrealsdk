@@ -9,7 +9,7 @@ using namespace unrealsdk::unreal;
 namespace pyunrealsdk::unreal {
 
 void register_wrapped_array(py::module_& mod) {
-    auto cls = py::class_<WrappedArray>(mod, "WrappedArray");
+    auto cls = py::classh<WrappedArray>(mod, "WrappedArray");
     cls.def("__new__", &impl::array_py_new)
         .def(py::init(&impl::array_py_init))
         .def("__repr__", &impl::array_py_repr,

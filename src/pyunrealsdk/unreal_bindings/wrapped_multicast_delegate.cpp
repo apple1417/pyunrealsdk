@@ -130,7 +130,7 @@ WrappedMulticastDelegate* delegate_init_new(const py::args& /* args */,
 }  // namespace
 
 void register_wrapped_multicast_delegate(py::module_& mod) {
-    py::class_<WrappedMulticastDelegate>(mod, "WrappedMulticastDelegate")
+    py::classh<WrappedMulticastDelegate>(mod, "WrappedMulticastDelegate")
         .def(py::init(&delegate_init_new))
         .def("__new__", &delegate_init_new)
         .def(

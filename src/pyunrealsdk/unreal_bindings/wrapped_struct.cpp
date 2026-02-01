@@ -94,7 +94,7 @@ void make_struct(unrealsdk::unreal::WrappedStruct& out_struct,
 }
 
 void register_wrapped_struct(py::module_& mod) {
-    py::class_<WrappedStruct>(mod, "WrappedStruct")
+    py::classh<WrappedStruct>(mod, "WrappedStruct")
         .def(py::init([](std::variant<const unrealsdk::unreal::UFunction*,
                                       const unrealsdk::unreal::UScriptStruct*> type,
                          const py::args& args,

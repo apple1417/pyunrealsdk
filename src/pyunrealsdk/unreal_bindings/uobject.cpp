@@ -245,7 +245,7 @@ void register_uobject(py::module_& mod) {
                 PYUNREALSDK_STUBGEN_ARG_N("*chain"_a, "UProperty", ));
 
     // Create under an empty handle to prevent this type being normally accessible
-    py::class_<ContextManager>(py::handle(), "context_manager", pybind11::module_local())
+    py::classh<ContextManager>(py::handle(), "context_manager", pybind11::module_local())
         .def("__enter__", [](const py::object& /*self*/) { should_notify_counter++; })
         .def("__exit__", [](const py::object& /*self */, const py::object& /*exc_type*/,
                             const py::object& /*exc_value*/, const py::object& /*traceback*/) {

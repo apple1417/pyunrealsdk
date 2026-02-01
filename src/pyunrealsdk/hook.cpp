@@ -133,14 +133,14 @@ void register_module(py::module_& mod) {
                    "Called after the hooked function, even if it got blocked."))
         .finalize();
 
-    py::class_<Block>(
+    py::classh<Block>(
         hooks, PYUNREALSDK_STUBGEN_CLASS("Block", ),
         PYUNREALSDK_STUBGEN_DOCSTRING(
             "A sentinel used to indicate a hook should block execution of the unrealscript\n"
             "function.\n"))
         .def(py::init<>());
 
-    py::class_<Unset>(
+    py::classh<Unset>(
         hooks, PYUNREALSDK_STUBGEN_CLASS("Unset", ),
         PYUNREALSDK_STUBGEN_DOCSTRING(
             "A sentinel used to indicate a return value override is unset - i.e. the actual\n"
@@ -148,7 +148,7 @@ void register_module(py::module_& mod) {
         .def(py::init<>());
 
     // Create under an empty handle to prevent this type being normally accessible
-    py::class_<AutoInjectContextManager>(py::handle(), "context_manager", pybind11::module_local())
+    py::classh<AutoInjectContextManager>(py::handle(), "context_manager", pybind11::module_local())
         .def("__enter__", [](const py::object& /*self*/) { auto_inject_count++; })
         .def("__exit__", [](const py::object& /*self */, const py::object& /*exc_type*/,
                             const py::object& /*exc_value*/, const py::object& /*traceback*/) {
