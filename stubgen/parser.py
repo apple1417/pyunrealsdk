@@ -141,7 +141,7 @@ def parse_class_attr(args: Sequence[ArgTokens]) -> None:
     name = parse_string(args[0])
     type_hint = parse_string(args[1])
 
-    assert isinstance(context_stack[-1], ClassInfo)  # guarenteed by caller
+    assert isinstance(context_stack[-1], ClassInfo)  # guaranteed by caller
     context_stack[-1].attrs.append(AttrInfo(name, type_hint))
 
 
@@ -158,7 +158,7 @@ def parse_enum_attr(args: Sequence[ArgTokens]) -> None:
 
     while isinstance(context_stack[-1], EnumValueInfo):
         context_stack.pop()
-    assert isinstance(context_stack[-1], EnumInfo)  # guarenteed by caller
+    assert isinstance(context_stack[-1], EnumInfo)  # guaranteed by caller
 
     value = EnumValueInfo(name)
     context_stack[-1].values.append(value)
@@ -167,7 +167,7 @@ def parse_enum_attr(args: Sequence[ArgTokens]) -> None:
 
 def parse_func(args: Sequence[ArgTokens], func_type: FuncType) -> None:
     """
-    Parses one of the varous function stubgen macros.
+    Parses one of the various function stubgen macros.
 
     Args:
         args: The macro's args.

@@ -14,8 +14,10 @@ void register_weak_pointer(py::module_& mod) {
     PYUNREALSDK_STUBGEN_MODULE_N("unrealsdk.unreal")
 
 #if UNREALSDK_HAS_NATIVE_WEAK_POINTERS
+    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define EMULATED_WEAK_POINTER_NOTICE
 #else
+    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define EMULATED_WEAK_POINTER_NOTICE                                                     \
     "This is emulated, as there's no built in support for weak references. This means\n" \
     "there's a very rare chance that this returns a different object than what it was\n" \

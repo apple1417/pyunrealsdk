@@ -232,8 +232,10 @@ void register_bound_function(py::module_& mod) {
                 return info.get_py_return();
             },
 #if UNREALSDK_HAS_OPTIONAL_FUNC_PARAMS
+    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define OPTIONAL_FUNC_PARAMS_DOC " Optional params are also optional."
 #else
+    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define OPTIONAL_FUNC_PARAMS_DOC
 #endif
             PYUNREALSDK_STUBGEN_DOCSTRING(

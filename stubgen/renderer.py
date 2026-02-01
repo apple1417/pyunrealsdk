@@ -4,7 +4,7 @@ from pathlib import Path
 from pprint import pprint
 
 # Being slightly overzealous with the pyright ignores so that this will work even if you don't have
-# jinja installed in the same enviroment as pyright
+# jinja installed in the same environment as pyright
 from jinja2 import (  # pyright: ignore[reportMissingImports]
     Environment,  # pyright: ignore[reportUnknownVariableType]
     FileSystemLoader,  # pyright: ignore[reportUnknownVariableType]
@@ -67,7 +67,7 @@ def render_stubs(output_dir: Path, info: InfoDict) -> None:
     }
     if remaining:
         pprint(remaining, width=180)  # noqa: T203
-        assert not remaining, "above entries weren't consumed by tempaltes"
+        assert not remaining, "above entries weren't consumed by templates"
 
     subprocess.run(["ruff", "format", output_dir], check=True)
     subprocess.run(["ruff", "check", "--fix", output_dir], check=True)

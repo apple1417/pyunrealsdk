@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 # Being slightly overzealous with the pyright ignores so that this will work even if you don't have
-# pcpp installed in the same enviroment as pyright
+# pcpp installed in the same environment as pyright
 # Even with it installed, it's not type hinted, half of them still need to exist
 from pcpp.preprocessor import (  # pyright: ignore[reportMissingImports, reportMissingTypeStubs]
     Action,  # pyright: ignore[reportUnknownVariableType]
