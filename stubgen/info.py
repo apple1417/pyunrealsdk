@@ -20,7 +20,7 @@ __all__: tuple[str, ...] = (
 type InfoDict = dict[str, AttrInfo | ClassInfo | EnumInfo | FuncInfo | ModuleInfo]
 
 
-def format_docstring(docstring: str | None, indent: str = "") -> str:
+def format_docstring(docstring: str, indent: str = "") -> str:
     """
     Formats a docstring.
 
@@ -30,11 +30,37 @@ def format_docstring(docstring: str | None, indent: str = "") -> str:
     Returns:
         The formatted docstring.
     """
-    if docstring is None:
-        return ""
     if "\n" not in docstring:
         return textwrap.indent(f'"""{docstring}"""', indent)
-    return textwrap.indent(f'"""\n{docstring}"""', indent)
+
+    output = textwrap.indent(f'"""\n{docstring}"""', indent)
+
+    if docstring.splitlines()[1]:
+        # 1 blank line required between summary line and description
+        output += " # noqa: D205"
+
+    return output
+
+
+def format_deprecation_message(msg: str, indent: str = "") -> str:
+    """
+    Formats a deprecation message, including the decorator + newline.
+
+    Args:
+        msg: The message to format.
+        indent: How much to indent the deprecation message.
+    Returns:
+        The formatted message.
+    """
+    single_line = f'{indent}@warnings.deprecated("{msg}")'
+    if len(single_line) < 100:
+        return single_line + "\n"
+
+    wrapped = textwrap.wrap(msg, 100 - 2 - 4 - len(indent), drop_whitespace=False)
+    return textwrap.indent(
+        "@warnings.deprecated(" + "".join(f'\n{indent}    "{line}"' for line in wrapped) + ",\n)\n",
+        indent,
+    )
 
 
 @dataclass
@@ -43,7 +69,9 @@ class ModuleInfo:
     docstring: str | None = None
 
     def declare(self) -> str:
-        return format_docstring(self.docstring)
+        if self.docstring:
+            return format_docstring(self.docstring)
+        return ""
 
 
 @dataclass
@@ -84,15 +112,20 @@ class FuncInfo:
     ret: str
     args: list[ArgInfo] = field(default_factory=list)
     docstring: str | None = None
+    deprecated: str | None = None
+    generic: str | None = None
 
     def declare(self) -> str:
         output = ""
+        if self.deprecated:
+            output += format_deprecation_message(self.deprecated)
         if self.func_type == FuncType.StaticMethod:
             output += "@staticmethod\n"
         elif self.func_type == FuncType.ClassMethod:
             output += "@classmethod\n"
 
-        output += f"def {self.name}({', '.join(a.declare() for a in self.args)}) -> {self.ret}:\n"
+        output += f"def {self.name}{self.generic or ''}"
+        output += f"({', '.join(a.declare() for a in self.args)}) -> {self.ret}:\n"
 
         if self.docstring:
             output += format_docstring(self.docstring, "    ")
@@ -110,9 +143,14 @@ class ClassInfo:
     docstring: str | None = None
     attrs: list[AttrInfo] = field(default_factory=list)
     methods: list[FuncInfo] = field(default_factory=list)
+    deprecated: str | None = None
+    generic: str | None = None
 
     def declare(self) -> str:
-        output = f"class {self.name}"
+        output = ""
+        if self.deprecated:
+            output += format_deprecation_message(self.deprecated)
+        output += f"class {self.name}{self.generic or ''}"
         if self.super_class is not None:
             output += f"({self.super_class})"
         output += ":\n"

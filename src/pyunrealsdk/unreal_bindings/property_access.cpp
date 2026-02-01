@@ -1,7 +1,7 @@
 #include "pyunrealsdk/pch.h"
 #include "pyunrealsdk/unreal_bindings/property_access.h"
-#include <stdexcept>
 #include "pyunrealsdk/static_py_object.h"
+#include "pyunrealsdk/stubgen.h"
 #include "pyunrealsdk/unreal_bindings/uenum.h"
 #include "pyunrealsdk/unreal_bindings/wrapped_array.h"
 #include "pyunrealsdk/unreal_bindings/wrapped_struct.h"
@@ -89,14 +89,18 @@ PyFieldVariant py_find_field(const FName& name, const UStruct* type) {
 }
 
 void register_property_helpers(py::module_& mod) {
+    PYUNREALSDK_STUBGEN_MODULE_N("unrealsdk.unreal")
+
     mod.def(
-        "dir_includes_unreal", [](bool should_include) { dir_includes_unreal = should_include; },
-        "Sets if `__dir__` should include dynamic unreal properties, specific to the\n"
-        "object. Defaults to true.\n"
-        "\n"
-        "Args:\n"
-        "    should_include: True if to include dynamic properties, false to not.",
-        "should_include"_a);
+        PYUNREALSDK_STUBGEN_FUNC("dir_includes_unreal", "None"),
+        [](bool should_include) { dir_includes_unreal = should_include; },
+        PYUNREALSDK_STUBGEN_DOCSTRING(
+            "Sets if `__dir__` should include dynamic unreal properties, specific to the\n"
+            "object. Defaults to true.\n"
+            "\n"
+            "Args:\n"
+            "    should_include: True if to include dynamic properties, false to not.\n"),
+        PYUNREALSDK_STUBGEN_ARG("should_include"_a, "bool", ));
 }
 
 std::vector<std::string> py_dir(const py::object& self, const UStruct* type) {

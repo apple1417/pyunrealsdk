@@ -97,6 +97,9 @@ def parse_docstring(args: Sequence[ArgTokens]) -> None:
     if "\n" in docstring:
         assert docstring[-1] == "\n", "expected multiline docstring to end with a newline"
 
+    for line in docstring.splitlines():
+        assert len(line) <= 80, f"expect all docstrings be max 80 chars in width, got:\n{line}"  # noqa: PLR2004
+
     assert isinstance(
         context_stack[-1],
         ClassInfo | EnumInfo | EnumValueInfo | FuncInfo | ModuleInfo,
@@ -185,7 +188,10 @@ def parse_func(args: Sequence[ArgTokens], func_type: FuncType) -> None:
             assert full_name not in gathered_info, f"got duplicate function {full_name}"
             gathered_info[full_name] = func
         case FuncType.Method:
-            func.args.append(ArgInfo("self", None, None))
+            # https://docs.python.org/3/reference/datamodel.html#object.__new__
+            # >  __new__() is a static method (special-cased so you need not declare it as such)
+            # Treat __new__ as a regular method, to avoid the decorator, just rename the first arg
+            func.args.append(ArgInfo("cls" if name == "__new__" else "self", None, None))
         case FuncType.StaticMethod:
             pass
         case FuncType.ClassMethod:
@@ -284,6 +290,34 @@ def parse_class(args: Sequence[ArgTokens]) -> None:
     context_stack.append(cls)
 
 
+def parse_deprecated_generic(macro_name: str, args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_DEPRECATED or PYUNREALSDK_STUBGEN_GENERIC macro.
+
+    Args:
+        macro_name: The name of the macro being parsed.
+        args: The macro's args.
+    """
+    assert len(args) == 1, "expected one arg"
+    value = parse_string(args[0])
+
+    error_type = "deprecated" if macro_name == "PYUNREALSDK_STUBGEN_DEPRECATED" else "generic"
+    assert isinstance(context_stack[-1], ClassInfo | FuncInfo), (
+        f"can only add {error_type} to class, function or method"
+    )
+
+    if macro_name == "PYUNREALSDK_STUBGEN_DEPRECATED":
+        assert context_stack[-1].deprecated is None, (
+            "tried to add deprecation message to object which already has one"
+        )
+        context_stack[-1].deprecated = value
+    else:
+        assert context_stack[-1].generic is None, (
+            "tried to add generic to object which already has one"
+        )
+        context_stack[-1].generic = value
+
+
 def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
     """
     Parses all data out of the given file.
@@ -334,6 +368,8 @@ def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
                     parse_enum(args)
                 case "PYUNREALSDK_STUBGEN_CLASS":
                     parse_class(args)
+                case "PYUNREALSDK_STUBGEN_DEPRECATED" | "PYUNREALSDK_STUBGEN_GENERIC":
+                    parse_deprecated_generic(macro_name, args)
                 case _:
                     assert not macro.name.startswith("PYUNREALSDK_STUBGEN"), (
                         "encountered unknown stubgen macro"

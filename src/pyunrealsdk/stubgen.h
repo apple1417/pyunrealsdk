@@ -94,10 +94,27 @@ All macros have a `_N` null macro variant, which expands to nothing.
  * @brief Defines a class.
  *
  * @param name The class's name, as a string.
- * @param super If the class's superclass as a string, if it has one.
+ * @param super The class's superclass(es) as a string, if it has any.
  * @return Expands to the name string.
  */
 #define PYUNREALSDK_STUBGEN_CLASS(name, super) name
 #define PYUNREALSDK_STUBGEN_CLASS_N(name, super)
+
+/**
+ * @brief Adds the deprecated decorator to the previous class, function, or method.
+ *
+ * @param msg The deprecation message.
+ * @return Expands to the deprecation message.
+ */
+#define PYUNREALSDK_STUBGEN_DEPRECATED(msg) msg
+#define PYUNREALSDK_STUBGEN_DEPRECATED_N(msg)
+
+/**
+ * @brief Marks the previous class, function, or method as generic.
+ *
+ * @param types The generic types, including the square brackets.
+ */
+#define PYUNREALSDK_STUBGEN_GENERIC(types)
+#define PYUNREALSDK_STUBGEN_GENERIC_N(types)
 
 #endif /* PYUNREALSDK_STUBGEN_H */

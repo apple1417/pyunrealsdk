@@ -1,6 +1,7 @@
 #include "pyunrealsdk/pch.h"
 #include "pyunrealsdk/unreal_bindings/uenum.h"
 #include "pyunrealsdk/static_py_object.h"
+#include "pyunrealsdk/stubgen.h"
 #include "pyunrealsdk/unreal_bindings/bindings.h"
 #include "unrealsdk/unreal/classes/uenum.h"
 #include "unrealsdk/unreal/classes/ufield.h"
@@ -14,12 +15,14 @@ PYUNREALSDK_CAPI(PyObject*, enum_as_py_enum, const UEnum* enum_obj);
 #ifdef PYUNREALSDK_INTERNAL
 
 void register_uenum(py::module_& mod) {
-    PyUEClass<UEnum, UField>(mod, "UEnum")
-        .def("_as_py", &enum_as_py_enum,
-             "Generates a compatible IntFlag enum.\n"
-             "\n"
-             "Returns:\n"
-             "    An IntFlag enum compatible with this enum.");
+    PYUNREALSDK_STUBGEN_MODULE_N("unrealsdk.unreal")
+
+    PyUEClass<UEnum, UField>(mod, PYUNREALSDK_STUBGEN_CLASS("UEnum", "UField"))
+        .def(PYUNREALSDK_STUBGEN_METHOD("_as_py", "type[_GenericUnrealEnum]"), &enum_as_py_enum,
+             PYUNREALSDK_STUBGEN_DOCSTRING("Generates a compatible IntFlag enum.\n"
+                                           "\n"
+                                           "Returns:\n"
+                                           "    An IntFlag enum compatible with this enum.\n"));
 }
 
 py::object enum_as_py_enum(const UEnum* enum_obj) {

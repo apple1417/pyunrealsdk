@@ -1,6 +1,7 @@
 #include "pyunrealsdk/pch.h"
 #include "pyunrealsdk/unreal_bindings/bound_function.h"
 #include "pyunrealsdk/hooks.h"
+#include "pyunrealsdk/stubgen.h"
 #include "pyunrealsdk/unreal_bindings/property_access.h"
 #include "unrealsdk/hook_manager.h"
 #include "unrealsdk/unreal/classes/ufunction.h"
@@ -186,26 +187,31 @@ py::object PyCallInfo::get_py_return(void) const {
 }  // namespace impl
 
 void register_bound_function(py::module_& mod) {
-    py::class_<BoundFunction>(mod, "BoundFunction")
-        .def(py::init<UFunction*, UObject*>(),
-             "Creates a new bound function.\n"
-             "\n"
-             "Args:\n"
-             "    func: The function to bind.\n"
-             "    object: The object the function is bound to.",
-             "func"_a, "object"_a)
+    PYUNREALSDK_STUBGEN_MODULE_N("unrealsdk.unreal")
+
+    py::classh<BoundFunction>(mod, PYUNREALSDK_STUBGEN_CLASS("BoundFunction", ))
+        .def(py::init<UFunction*, UObject*>() PYUNREALSDK_STUBGEN_METHOD_N("__init__", "None"),
+             PYUNREALSDK_STUBGEN_DOCSTRING("Creates a new bound function.\n"
+                                           "\n"
+                                           "Args:\n"
+                                           "    func: The function to bind.\n"
+                                           "    object: The object the function is bound to.\n"),
+             PYUNREALSDK_STUBGEN_ARG("func"_a, "UFunction", ),
+             PYUNREALSDK_STUBGEN_ARG("object"_a, "UObject", ))
         .def(
-            "__repr__",
+            PYUNREALSDK_STUBGEN_METHOD("__repr__", "str"),
             [](BoundFunction& self) {
                 return std::format("<bound function {} on {}>", self.func->Name(),
                                    unrealsdk::utils::narrow(self.object->get_path_name()));
             },
-            "Gets a string representation of this function and the object it's bound to.\n"
-            "\n"
-            "Returns:\n"
-            "    The string representation.")
+            PYUNREALSDK_STUBGEN_DOCSTRING(
+                "Gets a string representation of this function and the object it's bound to.\n"
+                "\n"
+                "Returns:\n"
+                "    The string representation.\n"))
         .def(
-            "__call__",
+            // HACK: include the noqa in the return value. This gives us an extra colon but meh.
+            PYUNREALSDK_STUBGEN_METHOD("__call__", "Any:  # noqa: D417 "),
             [](BoundFunction& self, const py::args& args, const py::kwargs& kwargs) {
                 impl::PyCallInfo info{self.func, args, kwargs};
 
@@ -225,25 +231,30 @@ void register_bound_function(py::module_& mod) {
 
                 return info.get_py_return();
             },
-            "Calls the function.\n"
-            "\n"
-            "Args:\n"
-            "    The unreal function's args. Out params will be used to initialized the\n"
-            "    unreal value, but the python value is not modified in place. Kwargs are\n"
-            "    supported.\n"
 #if UNREALSDK_HAS_OPTIONAL_FUNC_PARAMS
-            "    Optional params should also be optional.\n"
+#define OPTIONAL_FUNC_PARAMS_DOC " Optional params are also optional."
+#else
+#define OPTIONAL_FUNC_PARAMS_DOC
 #endif
-            "    Alternatively, may call with a single positional WrappedStruct which matches\n"
-            "    the type of the function, in order to reuse the args already stored in it.\n"
-            "Returns:\n"
-            "    If the function has no out params, returns the actual return value, or\n"
-            "    Ellipsis for a void function.\n"
-            "    If there are out params, returns a tuple, where the first entry is the\n"
-            "    return value as described above, and the following entries are the final\n"
-            "    values of each of the out params, in positional order.")
-        .def_readwrite("func", &BoundFunction::func)
-        .def_readwrite("object", &BoundFunction::object);
+            PYUNREALSDK_STUBGEN_DOCSTRING(
+                "Calls the function.\n"
+                "\n"
+                "Args:\n"
+                "    The unreal function's args. Out params will be used to initialized the\n"
+                "    unreal value, but the python value is not modified in place. Kwargs are\n"
+                "    supported." OPTIONAL_FUNC_PARAMS_DOC "\n"
+                "    Alternatively, may call with a single positional WrappedStruct which matches\n"
+                "    the type of the function, in order to reuse the args already stored in it.\n"
+                "Returns:\n"
+                "    If the function has no out params, returns the actual return value, or\n"
+                "    Ellipsis for a void function.\n"
+                "    If there are out params, returns a tuple, where the first entry is the\n"
+                "    return value as described above, and the following entries are the final\n"
+                "    values of each of the out params, in positional order.\n")
+                PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", )
+                    PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))
+        .def_readwrite(PYUNREALSDK_STUBGEN_ATTR("func", "UFunction"), &BoundFunction::func)
+        .def_readwrite(PYUNREALSDK_STUBGEN_ATTR("object", "UObject"), &BoundFunction::object);
 }
 
 }  // namespace pyunrealsdk::unreal
