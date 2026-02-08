@@ -4,7 +4,7 @@ import re
 from enum import StrEnum
 from io import StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 # Being slightly overzealous with the pyright ignores so that this will work even if you don't have
 # pcpp installed in the same environment as pyright
@@ -169,12 +169,12 @@ def parse_flavour_macros(flavour: Flavour) -> dict[str, Any]:
         pproc.parse(file)  # pyright: ignore[reportUnknownMemberType]
     pproc.write(StringIO())  # pyright: ignore[reportUnknownMemberType]
 
-    macro_dict: dict[str, Macro] = pproc.macros  # pyright: ignore[reportUnknownMemberType]
+    macro_dict: dict[str, Macro] = pproc.macros  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
     output_dict: dict[str, Any] = {}
 
-    for _name, _macro in macro_dict.items():
-        name: str = _name
-        macro: Macro = _macro
+    for _name, _macro in macro_dict.items():  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        name = cast(str, _name)  # type: ignore
+        macro = cast("Macro", _macro)  # type: ignore
 
         if not name.startswith("UNREALSDK_"):
             continue

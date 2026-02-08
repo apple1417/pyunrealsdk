@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import textwrap
-from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 __all__: tuple[str, ...] = (
     "ArgInfo",
@@ -53,7 +56,7 @@ def format_deprecation_message(msg: str, indent: str = "") -> str:
         The formatted message.
     """
     single_line = f'{indent}@warnings.deprecated("{msg}")'
-    if len(single_line) < 100:
+    if len(single_line) < 100:  # noqa: PLR2004
         return single_line + "\n"
 
     wrapped = textwrap.wrap(msg, 100 - 2 - 4 - len(indent), drop_whitespace=False)
@@ -69,6 +72,12 @@ class ModuleInfo:
     docstring: str | None = None
 
     def declare(self) -> str:
+        """
+        Writes the docstring for this module.
+
+        Returns:
+            A string holding the module docstring.
+        """
         if self.docstring:
             return format_docstring(self.docstring)
         return ""
@@ -81,6 +90,12 @@ class AttrInfo:
     readonly_prop: bool = False
 
     def declare(self) -> str:
+        """
+        Declares this attribute.
+
+        Returns:
+            A string holding the declaration.
+        """
         if self.readonly_prop:
             output = f"@property\ndef {self.name}(self) -> {self.type_hint}: ..."
             if not self.name.islower():
@@ -97,6 +112,12 @@ class ArgInfo:
     default: str | None
 
     def declare(self) -> str:
+        """
+        Declares this arg.
+
+        Returns:
+            A string holding the declaration.
+        """
         output = self.name
         if self.type_hint:
             output += f": {self.type_hint}"
@@ -126,6 +147,12 @@ class FuncInfo:
     overloads: list[FuncInfo] | None = field(default_factory=list)
 
     def declare(self) -> str:
+        """
+        Declares this function.
+
+        Returns:
+            A string holding the declaration.
+        """
         output = ""
         for overload in self.overloads or ():
             output += "@overload\n"
@@ -161,6 +188,12 @@ class ClassInfo:
     generic: str | None = None
 
     def declare(self) -> str:
+        """
+        Declares this class.
+
+        Returns:
+            A string holding the declaration.
+        """
         output = ""
         if self.deprecated:
             output += format_deprecation_message(self.deprecated)
@@ -188,6 +221,12 @@ class ClassInfo:
         return output
 
     def iter_methods(self) -> Iterator[FuncInfo]:
+        """
+        Iterates through all methods on this class, in the order we want to render them.
+
+        Yields:
+            Ordeded methods under this class.
+        """
         init: FuncInfo | None = None
         new: FuncInfo | None = None
         magic_methods: list[FuncInfo] = []
@@ -232,6 +271,12 @@ class EnumInfo:
     docstring: str | None = None
 
     def declare(self) -> str:
+        """
+        Declares this enum.
+
+        Returns:
+            A string holding the declaration.
+        """
         output = f"class {self.name}(Enum):\n"
         if self.docstring:
             output += format_docstring(self.docstring, "    ")
