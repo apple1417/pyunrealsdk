@@ -47,16 +47,14 @@ void register_uobject_children(py::module_& mod) {
         .def_member_prop(PYUNREALSDK_STUBGEN_ATTR("Name", "str"), &FFieldClass::Name)
         .def_member_prop(PYUNREALSDK_STUBGEN_ATTR("SuperField", "FFieldClass | None"),
                          &FFieldClass::SuperField)
-        .def(PYUNREALSDK_STUBGEN_METHOD("__new__", "Never"),
+        .def(PYUNREALSDK_STUBGEN_NEVER_METHOD("__new__"),
              [](const py::args&, const py::kwargs&) {
                  throw py::type_error("Cannot create new instances of unreal objects.");
-             } PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", )
-                 PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))
-        .def(PYUNREALSDK_STUBGEN_METHOD("__init__", "Never"),
+             })
+        .def(PYUNREALSDK_STUBGEN_NEVER_METHOD("__init__"),
              [](const py::args&, const py::kwargs&) {
                  throw py::type_error("Cannot create new instances of unreal objects.");
-             } PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", )
-                 PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))
+             })
         .def(
             PYUNREALSDK_STUBGEN_METHOD("__repr__", "str"),
             [](FFieldClass* self) {
@@ -95,16 +93,14 @@ void register_uobject_children(py::module_& mod) {
                     self.Owner() = std::get<FField*>(val);
                 }
             })
-        .def(PYUNREALSDK_STUBGEN_METHOD("__new__", "Never"),
+        .def(PYUNREALSDK_STUBGEN_NEVER_METHOD("__new__"),
              [](const py::args&, const py::kwargs&) {
                  throw py::type_error("Cannot create new instances of unreal objects.");
-             } PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", )
-                 PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))
-        .def(PYUNREALSDK_STUBGEN_METHOD("__init__", "Never"),
+             })
+        .def(PYUNREALSDK_STUBGEN_NEVER_METHOD("__init__"),
              [](const py::args&, const py::kwargs&) {
                  throw py::type_error("Cannot create new instances of unreal objects.");
-             } PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", )
-                 PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))
+             })
         .def(
             PYUNREALSDK_STUBGEN_METHOD("__repr__", "str"),
             [](FField* self) {

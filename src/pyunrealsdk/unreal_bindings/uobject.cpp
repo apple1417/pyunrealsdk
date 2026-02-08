@@ -53,14 +53,11 @@ void register_uobject(py::module_& mod) {
         .def_member_prop(PYUNREALSDK_STUBGEN_ATTR("Class", "UClass"), &UObject::Class)
         .def_member_prop(PYUNREALSDK_STUBGEN_ATTR("Name", "str"), &UObject::Name)
         .def_member_prop(PYUNREALSDK_STUBGEN_ATTR("Outer", "UObject"), &UObject::Outer)
-        .def(PYUNREALSDK_STUBGEN_METHOD("__new__", "Never"),
+        .def(PYUNREALSDK_STUBGEN_NEVER_METHOD("__new__"),
              [](const py::args&, const py::kwargs&) {
                  throw py::type_error("Cannot create new instances of unreal objects.");
-             } PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", )
-                 PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))
-        .def(py::init(&uobject_init) PYUNREALSDK_STUBGEN_METHOD_N("__init__", "Never")
-                 PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", )
-                     PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))
+             })
+        .def(PYUNREALSDK_STUBGEN_NEVER_METHOD_N("__init__") py::init(&uobject_init))
         .def(
             PYUNREALSDK_STUBGEN_METHOD("__repr__", "str"),
             [](UObject* self) {

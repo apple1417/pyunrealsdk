@@ -52,6 +52,17 @@ All macros have a `_N` null macro variant, which expands to nothing.
 #define PYUNREALSDK_STUBGEN_CLASSMETHOD_N(name, ret_type)
 
 /**
+ * @brief Defines a function overload, attaching to the last function or method.
+ * @note Acts as a new function of the same type as the one it attached to.
+ *
+ * @param name The overload's name, as a string. Must be identical to the previous function.
+ * @param ret The overload's python return type, as a string.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_OVERLOAD(name, ret_type) name
+#define PYUNREALSDK_STUBGEN_OVERLOAD_N(name, ret_type)
+
+/**
  * @brief Defines a docstring, attaching to the last relevant element.
  *
  * @param name The method's name, as a string.
@@ -118,5 +129,20 @@ All macros have a `_N` null macro variant, which expands to nothing.
  */
 #define PYUNREALSDK_STUBGEN_GENERIC(types)
 #define PYUNREALSDK_STUBGEN_GENERIC_N(types)
+
+/**
+ * @brief Defines a method with the signature 'def name(self, *args: Any, **kwargs: Any) -> Never:'
+ *
+ * @param name The function's name, as a string.
+ * @return Expands to the name string.
+ */
+#define PYUNREALSDK_STUBGEN_NEVER_METHOD(name)    \
+    PYUNREALSDK_STUBGEN_METHOD(name, "Never")     \
+    PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", ) \
+    PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", )
+#define PYUNREALSDK_STUBGEN_NEVER_METHOD_N(name)  \
+    PYUNREALSDK_STUBGEN_METHOD_N(name, "Never")   \
+    PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", ) \
+    PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", )
 
 #endif /* PYUNREALSDK_STUBGEN_H */

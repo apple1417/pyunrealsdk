@@ -27,23 +27,8 @@ type _PostHookCallback = Callable[[UObject, WrappedStruct, Any, BoundFunction], 
 type _PreHookType = Literal[Type.PRE]
 type _PostHookType = Literal[Type.POST, Type.POST_UNCONDITIONAL]
 
-@overload
-def add_hook(
-    func: str,
-    type: _PreHookType,
-    identifier: str,
-    callback: _PreHookCallback,
-) -> None: ...
-@overload
-def add_hook(
-    func: str,
-    type: _PostHookType,
-    identifier: str,
-    callback: _PostHookCallback,
-) -> None: ...
-{{ "unrealsdk.hooks.add_hook" | declare }}
-
 {% set funcs = [
+    "unrealsdk.hooks.add_hook",
     "unrealsdk.hooks.has_hook",
     "unrealsdk.hooks.inject_next_call",
     "unrealsdk.hooks.log_all_calls",

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .info import InfoDict, ModuleInfo
 from .parser import parse_file
-from .preprocessor import PYUNREALSDK_SRC, Flavour
+from .preprocessor import PYUNREALSDK_SRC, Flavour, parse_flavour_macros
 from .renderer import render_stubs
 
 
@@ -54,4 +54,4 @@ if __name__ == "__main__":
             all_info = merge_info(all_info, info)
 
     shutil.rmtree(args.output, ignore_errors=True)
-    render_stubs(args.output, all_info)
+    render_stubs(args.output, all_info, args.flavour)

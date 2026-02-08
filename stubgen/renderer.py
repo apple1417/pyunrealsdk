@@ -12,17 +12,19 @@ from jinja2 import (  # pyright: ignore[reportMissingImports]
 )
 
 from .info import InfoDict, ModuleInfo
+from .preprocessor import Flavour
 
 __all__: tuple[str, ...] = ("render_stubs",)
 
 
-def render_stubs(output_dir: Path, info: InfoDict) -> None:
+def render_stubs(output_dir: Path, info: InfoDict, flavour: Flavour) -> None:
     """
     Renders all stub files.
 
     Args:
         output_dir: The dir to write the stubs into.
         info: The collected stub info.
+        flavour: The SDK flavour being rendered.
     """
     loader = FileSystemLoader(Path(__file__).parent / "templates")  # pyright: ignore[reportUnknownVariableType]
     env = Environment(loader=loader, autoescape=select_autoescape())  # pyright: ignore[reportUnknownVariableType]
@@ -54,6 +56,8 @@ def render_stubs(output_dir: Path, info: InfoDict) -> None:
     env.filters["__all__"] = _all_  # pyright: ignore[reportUnknownMemberType]
     env.filters["declare"] = declare  # pyright: ignore[reportUnknownMemberType]
     env.filters["declare_all"] = declare_all  # pyright: ignore[reportUnknownMemberType]
+
+    env.globals["FLAVOUR"] = flavour  # type: ignore
 
     for name in loader.list_templates():  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
         template = env.get_template(name)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]

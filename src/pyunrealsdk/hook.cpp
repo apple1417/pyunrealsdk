@@ -260,6 +260,18 @@ void register_module(py::module_& mod) {
         PYUNREALSDK_STUBGEN_ARG("identifier"_a, "str", ),
         PYUNREALSDK_STUBGEN_ARG("callback"_a, "_PreHookCallback | _PostHookCallback", ));
 
+    PYUNREALSDK_STUBGEN_OVERLOAD_N("add_hook", "bool")
+    PYUNREALSDK_STUBGEN_ARG_N("func"_a, "str", )
+    PYUNREALSDK_STUBGEN_ARG_N("type"_a, "_PreHookType", )
+    PYUNREALSDK_STUBGEN_ARG_N("identifier"_a, "str", )
+    PYUNREALSDK_STUBGEN_ARG_N("callback"_a, "_PreHookCallback", )
+
+    PYUNREALSDK_STUBGEN_OVERLOAD_N("add_hook", "bool")
+    PYUNREALSDK_STUBGEN_ARG_N("func"_a, "str", )
+    PYUNREALSDK_STUBGEN_ARG_N("type"_a, "_PostHookType", )
+    PYUNREALSDK_STUBGEN_ARG_N("identifier"_a, "str", )
+    PYUNREALSDK_STUBGEN_ARG_N("callback"_a, "_PostHookCallback", )
+
     hooks.def(PYUNREALSDK_STUBGEN_FUNC("has_hook", "bool"), &unrealsdk::hook_manager::has_hook,
               PYUNREALSDK_STUBGEN_DOCSTRING("Checks if a hook exists.\n"
                                             "\n"

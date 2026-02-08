@@ -3,7 +3,6 @@ from __future__ import annotations
 import ast
 import sys
 from pathlib import Path
-from pyclbr import Class
 from typing import TYPE_CHECKING
 
 from .info import (
@@ -183,6 +182,24 @@ def parse_readonly_prop(args: Sequence[ArgTokens]) -> None:
     context_stack[-1].attrs.append(AttrInfo(name, type_hint, readonly_prop=True))
 
 
+def _create_func(func_type: FuncType, name: str, ret: str) -> FuncInfo:
+    func = FuncInfo(func_type, name, ret)
+    match func_type:
+        case FuncType.Func:
+            pass
+        case FuncType.Method:
+            # https://docs.python.org/3/reference/datamodel.html#object.__new__
+            # >  __new__() is a static method (special-cased so you need not declare it as such)
+            # Treat __new__ as a regular method, to avoid the decorator, just rename the first arg
+            func.args.append(ArgInfo("cls" if name == "__new__" else "self", None, None))
+        case FuncType.StaticMethod:
+            pass
+        case FuncType.ClassMethod:
+            func.args.append(ArgInfo("cls", None, None))
+
+    return func
+
+
 def parse_func(args: Sequence[ArgTokens], func_type: FuncType) -> None:
     """
     Parses one of the various function stubgen macros.
@@ -199,26 +216,45 @@ def parse_func(args: Sequence[ArgTokens], func_type: FuncType) -> None:
     while not isinstance(context_stack[-1], outer_type):
         context_stack.pop()
 
-    func = FuncInfo(func_type, name, ret)
-    match func_type:
-        case FuncType.Func:
-            full_name = ".".join(x.name for x in context_stack) + "." + name
-            assert full_name not in gathered_info, f"got duplicate function {full_name}"
-            gathered_info[full_name] = func
-        case FuncType.Method:
-            # https://docs.python.org/3/reference/datamodel.html#object.__new__
-            # >  __new__() is a static method (special-cased so you need not declare it as such)
-            # Treat __new__ as a regular method, to avoid the decorator, just rename the first arg
-            func.args.append(ArgInfo("cls" if name == "__new__" else "self", None, None))
-        case FuncType.StaticMethod:
-            pass
-        case FuncType.ClassMethod:
-            func.args.append(ArgInfo("cls", None, None))
+    func = _create_func(func_type, name, ret)
 
-    if func_type != FuncType.Func:
+    if func_type == FuncType.Func:
+        full_name = ".".join(x.name for x in context_stack) + "." + name
+        assert full_name not in gathered_info, f"got duplicate function {full_name}"
+        gathered_info[full_name] = func
+    else:
         assert isinstance(context_stack[-1], ClassInfo)
         context_stack[-1].methods.append(func)
 
+    context_stack.append(func)
+
+
+def parse_overload(args: Sequence[ArgTokens]) -> None:
+    """
+    Parses a PYUNREALSDK_STUBGEN_OVERLOAD macro.
+
+    Args:
+        args: The macro's args.
+    """
+    assert len(args) == 2, "expected two args"  # noqa: PLR2004
+    name = parse_string(args[0])
+    ret = parse_string(args[1])
+
+    assert isinstance(context_stack[-1], FuncInfo), "overload expected previous function"
+    assert context_stack[-1].name == name, "overload must have same name as previous function"
+
+    if context_stack[-1].overloads is None:
+        # The last entry on the stack *is* an overload, go back to the main function
+        context_stack.pop()
+
+        assert isinstance(context_stack[-1], FuncInfo), "overload expected previous function"
+        assert context_stack[-1].name == name, "overload must have same name as previous function"
+        assert context_stack[-1].overloads is not None, "found nested overload"
+
+    func = _create_func(context_stack[-1].func_type, name, ret)
+    func.overloads = None
+
+    context_stack[-1].overloads.append(func)
     context_stack.append(func)
 
 
@@ -380,6 +416,8 @@ def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
                     parse_func(args, FuncType.StaticMethod)
                 case "PYUNREALSDK_STUBGEN_CLASSMETHOD":
                     parse_func(args, FuncType.ClassMethod)
+                case "PYUNREALSDK_STUBGEN_OVERLOAD":
+                    parse_overload(args)
                 case "PYUNREALSDK_STUBGEN_ARG":
                     parse_arg(args)
                 case "PYUNREALSDK_STUBGEN_POS_ONLY" | "PYUNREALSDK_STUBGEN_KW_ONLY":
@@ -390,6 +428,9 @@ def parse_file(path: Path, flavour: Flavour) -> InfoDict:  # noqa: C901
                     parse_class(args)
                 case "PYUNREALSDK_STUBGEN_DEPRECATED" | "PYUNREALSDK_STUBGEN_GENERIC":
                     parse_deprecated_generic(macro_name, args)
+                case "PYUNREALSDK_STUBGEN_NEVER_METHOD":
+                    # Ignore, want to parse what this expands to instead
+                    pass
                 case _:
                     assert not macro.name.startswith("PYUNREALSDK_STUBGEN"), (
                         "encountered unknown stubgen macro"

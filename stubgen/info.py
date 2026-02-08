@@ -122,8 +122,15 @@ class FuncInfo:
     deprecated: str | None = None
     generic: str | None = None
 
+    # None on the overloads themselves to avoid nesting.
+    overloads: list[FuncInfo] | None = field(default_factory=list)
+
     def declare(self) -> str:
         output = ""
+        for overload in self.overloads or ():
+            output += "@overload\n"
+            output += overload.declare()
+
         if self.deprecated:
             output += format_deprecation_message(self.deprecated)
         if self.func_type == FuncType.StaticMethod:
