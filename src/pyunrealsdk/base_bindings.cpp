@@ -200,7 +200,7 @@ void register_base_bindings(py::module_& mod) {
             "Returns:\n"
             "    The unreal class.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
-        PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None", = std::nullopt));
+        PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None") = std::nullopt);
 
     mod.def(
         PYUNREALSDK_STUBGEN_FUNC("find_enum", "type[_GenericUnrealEnum]"),
@@ -224,7 +224,7 @@ void register_base_bindings(py::module_& mod) {
             "Returns:\n"
             "    The unreal enum.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
-        PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None", = std::nullopt));
+        PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None") = std::nullopt);
 
     mod.def(
         PYUNREALSDK_STUBGEN_FUNC("make_struct", "WrappedStruct"),
@@ -249,7 +249,7 @@ void register_base_bindings(py::module_& mod) {
             "Returns:\n"
             "    The newly constructed struct.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
-        PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None", = std::nullopt),
+        PYUNREALSDK_STUBGEN_ARG("fully_qualified"_a, "bool | None", "None") = std::nullopt,
         PYUNREALSDK_STUBGEN_POS_ONLY());
     PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", )
 
@@ -317,7 +317,7 @@ void register_base_bindings(py::module_& mod) {
             "Returns:\n"
             "    An iterator over all instances of the class.\n"),
         PYUNREALSDK_STUBGEN_ARG("cls"_a, "UClass | str", ),
-        PYUNREALSDK_STUBGEN_ARG("exact"_a, "bool", "True", = true));
+        PYUNREALSDK_STUBGEN_ARG("exact"_a, "bool", "True") = true);
 
     mod.def(
         PYUNREALSDK_STUBGEN_FUNC("construct_object", "UObject"),
@@ -348,9 +348,9 @@ void register_base_bindings(py::module_& mod) {
             "    The constructed object.\n"),
         PYUNREALSDK_STUBGEN_ARG("cls"_a, "UClass | str", ),
         PYUNREALSDK_STUBGEN_ARG("outer"_a, "UObject | None", ),
-        PYUNREALSDK_STUBGEN_ARG("name"_a, "str", "\"None\"", = FName{0, 0}),
-        PYUNREALSDK_STUBGEN_ARG("flags"_a, "int", "0", = 0),
-        PYUNREALSDK_STUBGEN_ARG("template_obj"_a, "UObject | None", "None", = nullptr));
+        PYUNREALSDK_STUBGEN_ARG("name"_a, "str", "\"None\"") = FName{0, 0},
+        PYUNREALSDK_STUBGEN_ARG("flags"_a, "int", "0") = 0,
+        PYUNREALSDK_STUBGEN_ARG("template_obj"_a, "UObject | None", "None") = nullptr);
 
     mod.def(
         PYUNREALSDK_STUBGEN_FUNC("load_package", "UObject"),
@@ -368,7 +368,7 @@ void register_base_bindings(py::module_& mod) {
             "Returns:\n"
             "    The loaded `Package` object.\n"),
         PYUNREALSDK_STUBGEN_ARG("name"_a, "str", ),
-        PYUNREALSDK_STUBGEN_ARG("flags"_a, "int", "0", = 0));
+        PYUNREALSDK_STUBGEN_ARG("flags"_a, "int", "0") = 0);
 
     create_and_add_config_dict(mod);
 }

@@ -266,7 +266,7 @@ def parse_arg(args: Sequence[ArgTokens]) -> None:
         args: The macro's args.
     """
 
-    assert len(args) >= 3, "expected at least 3 args"  # noqa: PLR2004
+    assert len(args) == 3, "expected 3 args"  # noqa: PLR2004
 
     assert args[0][-1].type == "CPP_ID" and args[0][-1].value == "_a", (
         'expected first arg to be a pybind "arg"_a literal'

@@ -36,7 +36,7 @@ void register_weak_pointer(py::module_& mod) {
                 EMULATED_WEAK_POINTER_NOTICE                      /* alignment */
                 "Args:\n"
                 "    obj: The object to create a weak reference to.\n"),
-            PYUNREALSDK_STUBGEN_ARG("obj"_a, "UObject | None", "None", = nullptr))
+            PYUNREALSDK_STUBGEN_ARG("obj"_a, "UObject | None", "None") = nullptr)
         .def(
             PYUNREALSDK_STUBGEN_METHOD("__call__", "T | None"),
             // Take a mutable reference, since the mutable dereference can do some optimizations

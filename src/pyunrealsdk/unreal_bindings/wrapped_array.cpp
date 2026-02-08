@@ -186,9 +186,9 @@ void register_wrapped_array(py::module_& mod) {
                  "Returns:\n"
                  "    The first index of the value in the array.\n"),
              PYUNREALSDK_STUBGEN_ARG("value"_a, "T", ),
-             PYUNREALSDK_STUBGEN_ARG("start"_a, "int", "0", = 0),
-             PYUNREALSDK_STUBGEN_ARG("stop"_a, "int", "sys.maxsize",
-                                     = std::numeric_limits<py::ssize_t>::max()))
+             PYUNREALSDK_STUBGEN_ARG("start"_a, "int", "0") = 0,
+             PYUNREALSDK_STUBGEN_ARG("stop"_a, "int", "sys.maxsize") =
+                 std::numeric_limits<py::ssize_t>::max())
         .def(
             PYUNREALSDK_STUBGEN_METHOD("insert", "None"), &impl::array_py_insert,
             PYUNREALSDK_STUBGEN_DOCSTRING("Inserts an item into the array before the given index.\n"
@@ -203,7 +203,7 @@ void register_wrapped_array(py::module_& mod) {
                  "\n"
                  "Args:\n"
                  "    idx: The index to remove the item from.\n"),
-             PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "-1", = -1))
+             PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "-1") = -1)
         .def(PYUNREALSDK_STUBGEN_METHOD("remove", "None"), &impl::array_py_remove,
              PYUNREALSDK_STUBGEN_DOCSTRING(
                  "Finds the first instance of the given value in the array, and removes it.\n"
@@ -223,8 +223,8 @@ void register_wrapped_array(py::module_& mod) {
                  "    key: A one-arg function used to extract a comparison key.\n"
                  "    reverse: If true, the list is sorted as if each comparison were reversed.\n"),
              PYUNREALSDK_STUBGEN_KW_ONLY(),
-             PYUNREALSDK_STUBGEN_ARG("key"_a, "None | Callable[[T], Any]", "None", = py::none{}),
-             PYUNREALSDK_STUBGEN_ARG("reverse"_a, "bool", "False", = false))
+             PYUNREALSDK_STUBGEN_ARG("key"_a, "None | Callable[[T], Any]", "None") = py::none{},
+             PYUNREALSDK_STUBGEN_ARG("reverse"_a, "bool", "False") = false)
         .def(PYUNREALSDK_STUBGEN_METHOD("_get_address", "int"), &impl::array_py_getaddress,
              PYUNREALSDK_STUBGEN_DOCSTRING("Gets the address of this array, for debugging.\n"
                                            "\n"
@@ -243,8 +243,8 @@ void register_wrapped_array(py::module_& mod) {
                  "    *args: Fields on the struct to initialize. Note you must explicitly specify\n"
                  "           idx to use these.\n"
                  "    **kwargs: Fields on the struct to initialize.\n"),
-             PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "sys.maxsize",
-                                     = std::numeric_limits<py::ssize_t>::max()),
+             PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "sys.maxsize") =
+                 std::numeric_limits<py::ssize_t>::max(),
              PYUNREALSDK_STUBGEN_POS_ONLY()                /* alignment */
              PYUNREALSDK_STUBGEN_ARG_N("*args"_a, "Any", ) /* alignment */
              PYUNREALSDK_STUBGEN_ARG_N("**kwargs"_a, "Any", ))

@@ -76,13 +76,11 @@ All macros have a `_N` null macro variant, which expands to nothing.
  *
  * @param name The arg's name, as a pybind _a literal.
  * @param type The arg's type hint, as a string.
- * @param py_default If this arg has a default value, a string holding it's python equivalent,
- *                   excluding the equals.
- * @param ... If this arg has a default value, the cpp version, including the equals.
- * @return Expands to the name string followed by the cpp default value.
+ * @param py_default If this arg has a default value, a string holding it's python equivalent.
+ * @return Expands to the name string.
  */
-#define PYUNREALSDK_STUBGEN_ARG(name, type, py_default, ...) name __VA_ARGS__
-#define PYUNREALSDK_STUBGEN_ARG_N(name, type, py_default, ...)
+#define PYUNREALSDK_STUBGEN_ARG(name, type, py_default) name
+#define PYUNREALSDK_STUBGEN_ARG_N(name, type, py_default)
 
 /**
  * @brief Marker for where pos-only/kw-only args start, attaching to the last function or method.

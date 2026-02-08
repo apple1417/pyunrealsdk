@@ -130,9 +130,9 @@ class Logger {
     PYUNREALSDK_STUBGEN_DOCSTRING_N(PER_LOG_LEVEL_PRINTER_DOCSTRING(docstring_name))            \
     /* HACK: include the noqa in the arg name  */                                               \
     PYUNREALSDK_STUBGEN_ARG_N("  # noqa: D417\n    *objects"_a, "Any", )                        \
-    PYUNREALSDK_STUBGEN_ARG_N("sep"_a, "str | None", "\" \"", )                                 \
-    PYUNREALSDK_STUBGEN_ARG_N("end"_a, "str | None", "\"\\n\"", )                               \
-    PYUNREALSDK_STUBGEN_ARG_N("flush"_a, "bool", "False", )
+    PYUNREALSDK_STUBGEN_ARG_N("sep"_a, "str | None", "\" \"")                                   \
+    PYUNREALSDK_STUBGEN_ARG_N("end"_a, "str | None", "\"\\n\"")                                 \
+    PYUNREALSDK_STUBGEN_ARG_N("flush"_a, "bool", "False")
 
 /**
  * @brief Registers a function which prints at a specific log level.
@@ -194,7 +194,7 @@ void register_module(py::module_& mod) {
                                            "\n"
                                            "Args:\n"
                                            "    level: The default log level to initialize to.\n"),
-             PYUNREALSDK_STUBGEN_ARG("level"_a, "Level", "Level.INFO", = Level::INFO))
+             PYUNREALSDK_STUBGEN_ARG("level"_a, "Level", "Level.INFO") = Level::INFO)
         .def_readwrite(PYUNREALSDK_STUBGEN_ATTR("level", "Level"), &Logger::level,
                        "The current log level which messages are written at.")
         .def(PYUNREALSDK_STUBGEN_METHOD("write", "int"), &Logger::write,

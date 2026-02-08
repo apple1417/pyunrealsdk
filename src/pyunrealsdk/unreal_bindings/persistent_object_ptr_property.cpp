@@ -127,7 +127,7 @@ void register_persistent_object_properties(py::module_& mod) {
                 "    The raw 16 bytes composing the property's Guid.\n"),
             PYUNREALSDK_STUBGEN_ARG("source"_a, "UObject | WrappedStruct", ),
             PYUNREALSDK_STUBGEN_ARG("prop"_a, "ULazyObjectProperty | str", ),
-            PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "0", = 0))
+            PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "0") = 0)
         .def_static(
             PYUNREALSDK_STUBGEN_STATICMETHOD("_get_identifier_from_array", "bytes"),
             [](const WrappedArray& source, size_t idx) {
@@ -172,7 +172,7 @@ void register_persistent_object_properties(py::module_& mod) {
                 "    The path name of the object the given property is looking for.\n"),
             PYUNREALSDK_STUBGEN_ARG("source"_a, "UObject | WrappedStruct", ),
             PYUNREALSDK_STUBGEN_ARG("prop"_a, "USoftObjectProperty | str", ),
-            PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "0", = 0))
+            PYUNREALSDK_STUBGEN_ARG("idx"_a, "int", "0") = 0)
         .def_static(
             PYUNREALSDK_STUBGEN_STATICMETHOD("_get_identifier_from_array", "str"),
             [](const WrappedArray& source, size_t idx) {
