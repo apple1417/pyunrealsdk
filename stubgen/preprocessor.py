@@ -152,7 +152,7 @@ def parse_macros_from_file(
 
 def parse_flavour_macros(flavour: Flavour) -> dict[str, Any]:
     """
-    Parses out what each flavour macro evaulates to.
+    Parses out what each flavour macro evaluates to.
 
     Args:
         flavour: The unrealsdk flavour to parse the file as.

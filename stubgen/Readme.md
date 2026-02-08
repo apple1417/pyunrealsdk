@@ -14,7 +14,7 @@ Firstly, we have to gather all the definitions from the C++ source code.
 
 Rather than trying to parse arbitrary C++, we define a number of macros in `pyunrealsdk/stubgen.h`,
 and simply look for them. These macros are parsed *after* applying any ifdef using variables from
-`unrealsdk/flavour.h`, so that any behavious switched on them also change what Python metadata we
+`unrealsdk/flavour.h`, so that any behaviour switched on them also change what Python metadata we
 pull out.
 
 Most of these macros evaluate directly to one of their args, acting as passthroughs, while also
@@ -39,7 +39,7 @@ the stack until it finds the last class or module. The exact semantics of this a
 these scripts are not meant to be general purpose, as long as they can parse our source code they're
 good enough.
 
-Each `.cpp` file is parsed seperately (with it's own context stack), strictly linearly from top to
+Each `.cpp` file is parsed separately (with it's own context stack), strictly linearly from top to
 bottom. If something is defined inside a loop in C++, or by calling some function repeatedly with
 different args, these scripts will not be able to pick them up. Instead, we need extra macros to
 declare each variants. This *can* use higher level macros.
@@ -49,12 +49,12 @@ void declare_adder(py::module_& mod, const char* name, int value) {
     mod.def(name, [value](int base) { return base + value; }, "adds a number", "base"_a);
 }
 
-#define STUBGEN_ADDER(name)                  \
-    PYUNREALSDK_STUBGEN_FUNC_N(name, "int") \
+#define STUBGEN_ADDER(name)                          \
+    PYUNREALSDK_STUBGEN_FUNC_N(name, "int")          \
     PYUNREALSDK_STUBGEN_DOCSTRING_N("adds a number") \
     PYUNREALSDK_STUBGEN_ARG_N("base"_a, "int",)
 
-...
+// ...
 
 declare_adder(mod, "add_three", 3);
 declare_adder(mod, "add_five", 5);
