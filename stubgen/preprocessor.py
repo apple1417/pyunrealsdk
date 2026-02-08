@@ -92,7 +92,7 @@ class CustomPreprocessor(Preprocessor):  # pyright: ignore[reportUntypedBaseClas
             return
         raise OutputDirective(Action.IgnoreAndPassThrough)  # pyright: ignore[reportUnknownMemberType]
 
-    # Hijack macro expansion to record them as they pass
+    # Hijack macro arg expansion to record them as they pass
     def macro_expand_args(  # pyright: ignore[reportIncompatibleMethodOverride]:
         self,
         macro: Macro,
@@ -148,3 +148,47 @@ def parse_macros_from_file(
     pproc.write(StringIO())  # pyright: ignore[reportUnknownMemberType]
 
     yield from pproc.seen_macros
+
+
+def parse_flavour_macros(flavour: Flavour) -> dict[str, Any]:
+    """
+    Parses out what each flavour macro evaulates to.
+
+    Args:
+        flavour: The unrealsdk flavour to parse the file as.
+    Returns:
+        A dict of the flavour macro name to it's value.
+    """
+    pproc = CustomPreprocessor()
+
+    pproc.define("false 0")  # pyright: ignore[reportUnknownMemberType]
+    pproc.define("true 1")  # pyright: ignore[reportUnknownMemberType]
+    pproc.define(f"UNREALSDK_FLAVOUR UNREALSDK_FLAVOUR_{flavour}")  # pyright: ignore[reportUnknownMemberType]
+
+    with (UNREALSDK_SRC / "unrealsdk" / "flavour.h").open() as file:
+        pproc.parse(file)  # pyright: ignore[reportUnknownMemberType]
+    pproc.write(StringIO())  # pyright: ignore[reportUnknownMemberType]
+
+    macro_dict: dict[str, Macro] = pproc.macros  # pyright: ignore[reportUnknownMemberType]
+    output_dict: dict[str, Any] = {}
+
+    for _name, _macro in macro_dict.items():
+        name: str = _name
+        macro: Macro = _macro
+
+        if not name.startswith("UNREALSDK_"):
+            continue
+
+        # Ignore anything which doesn't expand to a value (i.e. the header guard)
+        if not macro.value:
+            continue
+        # Ignore anything which is a function rather than a simple variable
+        if macro.arglist or macro.variadic:
+            continue
+
+        result, _tokens = pproc.evalexpr(macro.value)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        assert isinstance(result, int), "expected flavour macro to expand to a single integer"
+
+        output_dict[name] = result
+
+    return output_dict

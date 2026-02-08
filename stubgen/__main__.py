@@ -53,5 +53,7 @@ if __name__ == "__main__":
             info = parse_file(dirpath / name, args.flavour)
             all_info = merge_info(all_info, info)
 
+    flavour_macros = parse_flavour_macros(args.flavour)
+
     shutil.rmtree(args.output, ignore_errors=True)
-    render_stubs(args.output, all_info, args.flavour)
+    render_stubs(args.output, all_info, flavour_macros)

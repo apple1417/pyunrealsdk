@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ._uobject_children import UField, UFunction, UScriptStruct, UStruct
-{% if FLAVOUR == "OAK2" %}
+{% if UNREALSDK_PROPERTIES_ARE_FFIELD %}
 from ._uobject_children import UProperty
 {% endif %}
 
