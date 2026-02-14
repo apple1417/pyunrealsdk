@@ -28,6 +28,26 @@ def merge_info(a: InfoDict, b: InfoDict) -> InfoDict:
     return a | b
 
 
+def generate(flavour: Flavour, output: Path) -> None:
+    """
+    Generates all stub files for the given flavour.
+
+    Args:
+        flavour: The flavour to generate for.
+        output: The output path to write stubs into.
+    """
+    all_info: InfoDict = {}
+    for dirpath, _dirnames, filenames in PYUNREALSDK_SRC.walk():
+        for name in filenames:
+            info = parse_file(dirpath / name, flavour)
+            all_info = merge_info(all_info, info)
+
+    flavour_macros = parse_flavour_macros(flavour)
+
+    shutil.rmtree(output, ignore_errors=True)
+    render_stubs(output, all_info, flavour_macros)
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -47,13 +67,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    all_info: InfoDict = {}
-    for dirpath, _dirnames, filenames in PYUNREALSDK_SRC.walk():
-        for name in filenames:
-            info = parse_file(dirpath / name, args.flavour)
-            all_info = merge_info(all_info, info)
-
-    flavour_macros = parse_flavour_macros(args.flavour)
-
-    shutil.rmtree(args.output, ignore_errors=True)
-    render_stubs(args.output, all_info, flavour_macros)
+    generate(args.flavour, args.output)

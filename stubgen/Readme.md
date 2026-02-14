@@ -9,6 +9,12 @@ pip install -r stubgen/requirements.txt
 python -m stubgen WILLOW
 ```
 
+Alternatively, if you set up your python path appropriately, you can run it programmatically.
+```py
+import stubgen
+stubgen.generate(stubgen.Flavour.OAK, Path("output"))
+```
+
 ### How it works
 Firstly, we have to gather all the definitions from the C++ source code.
 

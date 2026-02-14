@@ -14,7 +14,18 @@
 #pragma clang diagnostic ignored "-Wlanguage-extension-token"
 #endif
 
+// Expect to be linking against the release Python, even if we're building debug pyunrealsdk
+#if defined(_DEBUG) && !defined(PYUNREALSDK_LINK_AGAINST_DEBUG_PYTHON)
+#define _PYUNREALSDK_DEBUG
+#undef _DEBUG
+#endif
+
 #include "Python.h"
+
+#ifdef _PYUNREALSDK_DEBUG
+#undef _PYUNREALSDK_DEBUG
+#define _DEBUG
+#endif
 
 #ifdef __clang__
 #pragma clang diagnostic pop
